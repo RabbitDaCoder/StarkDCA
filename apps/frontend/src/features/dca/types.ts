@@ -1,4 +1,10 @@
-import type { DCAPlan, CreatePlanRequest, Interval, ExecutionLog, PriceData } from '@stark-dca/shared-types';
+import type {
+  DCAPlan,
+  CreatePlanRequest,
+  Interval,
+  ExecutionLog,
+  PriceData,
+} from '@stark-dca/shared-types';
 
 // ─── Dashboard summary ──────────────────────────────────────
 

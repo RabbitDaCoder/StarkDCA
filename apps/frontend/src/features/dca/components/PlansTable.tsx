@@ -23,7 +23,10 @@ interface Props {
   onCancel: (planId: string) => void;
 }
 
-const statusBadge: Record<PlanStatus, { label: string; variant: 'success' | 'warning' | 'secondary' | 'destructive' }> = {
+const statusBadge: Record<
+  PlanStatus,
+  { label: string; variant: 'success' | 'warning' | 'secondary' | 'destructive' }
+> = {
   [PlanStatus.Active]: { label: 'Active', variant: 'success' },
   [PlanStatus.Paused]: { label: 'Paused', variant: 'warning' },
   [PlanStatus.Cancelled]: { label: 'Cancelled', variant: 'destructive' },
@@ -63,9 +66,10 @@ export function PlansTable({ plans, onCancel }: Props) {
       <TableBody>
         {plans.map((plan) => {
           const badge = statusBadge[plan.status];
-          const progress = plan.totalExecutions > 0
-            ? Math.round((plan.executionsCompleted / plan.totalExecutions) * 100)
-            : 0;
+          const progress =
+            plan.totalExecutions > 0
+              ? Math.round((plan.executionsCompleted / plan.totalExecutions) * 100)
+              : 0;
 
           return (
             <TableRow key={plan.id}>

@@ -33,12 +33,14 @@ const steps = [
   {
     step: '02',
     title: 'Create a Plan',
-    description: 'Choose your buy amount, frequency, and duration. Configure as many plans as you need.',
+    description:
+      'Choose your buy amount, frequency, and duration. Configure as many plans as you need.',
   },
   {
     step: '03',
     title: 'Accumulate BTC',
-    description: 'The protocol executes your buys on schedule. Monitor performance from your dashboard.',
+    description:
+      'The protocol executes your buys on schedule. Monitor performance from your dashboard.',
   },
 ];
 
@@ -98,12 +100,8 @@ export default function Landing() {
       <section className="border-t bg-card/50 py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-12 text-center">
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Why StarkDCA?
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Simple, non-custodial, and fully on-chain.
-            </p>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Why StarkDCA?</h2>
+            <p className="mt-2 text-muted-foreground">Simple, non-custodial, and fully on-chain.</p>
           </div>
           <div className="grid gap-6 sm:grid-cols-3">
             {features.map((f) => (
@@ -149,9 +147,7 @@ export default function Landing() {
             <Bitcoin className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">StarkDCA</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Built on Starknet. Open source.
-          </p>
+          <p className="text-xs text-muted-foreground">Built on Starknet. Open source.</p>
         </div>
       </footer>
     </div>

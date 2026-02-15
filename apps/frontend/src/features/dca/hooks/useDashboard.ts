@@ -71,9 +71,8 @@ export function useDashboard() {
     totalDeposited: plans.reduce((sum, p) => sum + parseFloat(p.totalDeposited), 0),
     activePlans: activePlans.length,
     btcAccumulated: 0.1847, // demo value
-    nextExecutionIn: activePlans.length > 0
-      ? Math.min(...activePlans.map((p) => p.nextExecutionAt))
-      : 0,
+    nextExecutionIn:
+      activePlans.length > 0 ? Math.min(...activePlans.map((p) => p.nextExecutionAt)) : 0,
   };
 
   return { plans, summary, loading, cancelPlan };

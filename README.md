@@ -87,12 +87,12 @@ stark-dca/
 
 ### Tech Stack
 
-| Layer     | Technology                                                                 |
-| --------- | -------------------------------------------------------------------------- |
+| Layer     | Technology                                                                                                            |
+| --------- | --------------------------------------------------------------------------------------------------------------------- |
 | Frontend  | React 18, Vite 5, TypeScript 5.4, TailwindCSS 3.4, shadcn/ui, Radix UI, Lucide Icons, Zustand, Axios, Starknet.js 6.9 |
-| Backend   | Node.js, Express 4, TypeScript, node-cron, Winston, Jest, Starknet.js 6.9 |
-| Contracts | Cairo (edition 2024_07), Scarb, Starknet Foundry v0.35.0                  |
-| Shared    | `@stark-dca/shared-types` — TypeScript types shared across apps            |
+| Backend   | Node.js, Express 4, TypeScript, node-cron, Winston, Jest, Starknet.js 6.9                                             |
+| Contracts | Cairo (edition 2024_07), Scarb, Starknet Foundry v0.35.0                                                              |
+| Shared    | `@stark-dca/shared-types` — TypeScript types shared across apps                                                       |
 
 ### Setup
 

@@ -1,5 +1,10 @@
 import { apiClient, unwrap } from './client';
-import type { DCAPlan, CreatePlanRequest, ApiResponse, ExecutionLog } from '@stark-dca/shared-types';
+import type {
+  DCAPlan,
+  CreatePlanRequest,
+  ApiResponse,
+  ExecutionLog,
+} from '@stark-dca/shared-types';
 
 export const dcaApi = {
   getPlans: async (): Promise<DCAPlan[]> => {

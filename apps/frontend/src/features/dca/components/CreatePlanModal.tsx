@@ -43,9 +43,8 @@ export function CreatePlanModal({ open, onOpenChange }: Props) {
     onOpenChange(false);
   };
 
-  const totalCost = amount && executions
-    ? (parseFloat(amount) * parseInt(executions)).toFixed(2)
-    : '0.00';
+  const totalCost =
+    amount && executions ? (parseFloat(amount) * parseInt(executions)).toFixed(2) : '0.00';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
