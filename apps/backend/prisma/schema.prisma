@@ -1,0 +1,112 @@
+// ─── Prisma Schema ─── StarkDCA Backend ─────────────────────────────
+// PostgreSQL with full relational integrity, indexes, and enums.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────
+
+enum PlanStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum Interval {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum ExecutionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// ─── Models ──────────────────────────────────────────────────────────
+
+model User {
+  id              String   @id @default(uuid())
+  starknetAddress String   @unique @map("starknet_address")
+  nonce           Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  plans         DCAPlan[]
+  refreshTokens RefreshToken[]
+
+  @@index([starknetAddress])
+  @@map("users")
+}
+
+model DCAPlan {
+  id                    String     @id @default(uuid())
+  userId                String     @map("user_id")
+  depositTokenAddress   String     @map("deposit_token_address")
+  targetTokenAddress    String     @map("target_token_address")
+  amountPerExecution    String     @map("amount_per_execution")
+  totalDeposited        String     @map("total_deposited")
+  totalExecutions       Int        @map("total_executions")
+  executionsCompleted   Int        @default(0) @map("executions_completed")
+  interval              Interval
+  nextExecutionAt       DateTime   @map("next_execution_at")
+  status                PlanStatus @default(ACTIVE)
+  onChainPlanId         String?    @map("on_chain_plan_id")
+  createdAt             DateTime   @default(now()) @map("created_at")
+  updatedAt             DateTime   @updatedAt @map("updated_at")
+
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  executions ExecutionHistory[]
+
+  @@index([userId])
+  @@index([status, nextExecutionAt])
+  @@index([onChainPlanId])
+  @@map("dca_plans")
+}
+
+model ExecutionHistory {
+  id               String          @id @default(uuid())
+  planId           String          @map("plan_id")
+  executionNumber  Int             @map("execution_number")
+  amountIn         String          @map("amount_in")
+  amountOut        String?         @map("amount_out")
+  priceAtExecution Float?          @map("price_at_execution")
+  txHash           String?         @map("tx_hash")
+  status           ExecutionStatus @default(PENDING)
+  errorMessage     String?         @map("error_message")
+  executedAt       DateTime        @default(now()) @map("executed_at")
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  plan DCAPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, executionNumber])
+  @@index([planId])
+  @@index([status])
+  @@index([executedAt])
+  @@map("execution_history")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  revoked   Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

@@ -1,9 +1,9 @@
-import { connect as starknetConnect, disconnect as starknetDisconnect } from 'get-starknet-core';
+import { connect, disconnect } from 'starknetkit';
 
 export async function connectWallet(): Promise<string | null> {
   try {
-    const wallet = await starknetConnect();
-    if (wallet && wallet.selectedAddress) {
+    const { wallet } = await connect();
+    if (wallet?.selectedAddress) {
       window.__STARK_DCA_WALLET_ADDRESS__ = wallet.selectedAddress;
       return wallet.selectedAddress;
     }
@@ -14,7 +14,7 @@ export async function connectWallet(): Promise<string | null> {
   }
 }
 
-export function disconnectWallet(): void {
-  starknetDisconnect();
+export async function disconnectWallet(): Promise<void> {
+  await disconnect();
   window.__STARK_DCA_WALLET_ADDRESS__ = undefined;
 }

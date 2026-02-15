@@ -24,8 +24,8 @@ export const useWalletStore = create<WalletState>((set) => ({
     }
   },
 
-  disconnect: () => {
-    disconnectWallet();
+  disconnect: async () => {
+    await disconnectWallet();
     set({ address: null, connected: false });
   },
 }));

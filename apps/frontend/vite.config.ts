@@ -7,6 +7,15 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      ws: path.resolve(__dirname, './src/lib/ws-shim.ts'),
+    },
+  },
+  optimizeDeps: {
+    include: ['starknetkit'],
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
   server: {
