@@ -75,3 +75,18 @@ export async function cacheDelPattern(pattern: string): Promise<void> {
     await redis.del(...keys);
   }
 }
+
+// Convenience export for direct redis access
+export const redis = {
+  get: async (key: string) => getRedis().get(key),
+  set: async (key: string, value: string, mode?: string, ttl?: number) => {
+    if (mode === 'EX' && ttl) {
+      return getRedis().setex(key, ttl, value);
+    }
+    return getRedis().set(key, value);
+  },
+  incr: async (key: string) => getRedis().incr(key),
+  expire: async (key: string, seconds: number) => getRedis().expire(key, seconds),
+  exists: async (key: string) => getRedis().exists(key),
+  del: async (key: string) => getRedis().del(key),
+};

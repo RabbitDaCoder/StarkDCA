@@ -10,7 +10,11 @@
     "rootDir": "./src",
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src", "vite-env.d.ts"],
   "references": [{ "path": "../../packages/shared-types" }]

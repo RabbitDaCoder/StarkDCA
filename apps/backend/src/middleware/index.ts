@@ -1,6 +1,7 @@
 export { errorHandler } from './error-handler';
 export { authenticate } from './authenticate';
 export type { JwtPayload } from './authenticate';
+export { requireAdmin } from './require-admin';
 export { idempotency } from './idempotency';
 export { rateLimit, authRateLimit, apiRateLimit, executionRateLimit } from './rate-limit';
 export { validate } from './validate';

@@ -32,19 +32,35 @@ enum ExecutionStatus {
   FAILED
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OAuthProvider {
+  GOOGLE
+}
+
 // ─── Models ──────────────────────────────────────────────────────────
 
 model User {
   id              String   @id @default(uuid())
-  starknetAddress String   @unique @map("starknet_address")
+  starknetAddress String?  @unique @map("starknet_address")
+  name            String?
+  email           String?  @unique
+  passwordHash    String?  @map("password_hash")
+  role            UserRole @default(USER)
+  emailVerified   Boolean  @default(false) @map("email_verified")
   nonce           Int      @default(0)
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   plans         DCAPlan[]
   refreshTokens RefreshToken[]
+  oauthAccounts OAuthAccount[]
 
   @@index([starknetAddress])
+  @@index([email])
   @@map("users")
 }
 
@@ -109,4 +125,37 @@ model RefreshToken {
   @@index([token])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+// ─── OAuth Accounts ─────────────────────────────────────────────────
+model OAuthAccount {
+  id             String        @id @default(uuid())
+  userId         String        @map("user_id")
+  provider       OAuthProvider
+  providerUserId String        @map("provider_user_id")
+  accessToken    String?       @map("access_token")
+  refreshToken   String?       @map("refresh_token")
+  tokenExpiresAt DateTime?     @map("token_expires_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+// ─── Waitlist ───────────────────────────────────────────────────────
+model WaitlistUser {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  ipAddress String?  @map("ip_address")
+  source    String?  // e.g., "landing", "referral", "twitter"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("waitlist_users")
 }

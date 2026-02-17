@@ -46,6 +46,28 @@ const envSchema = z.object({
   PLAN_CACHE_TTL: z.coerce.number().default(30),
   IDEMPOTENCY_TTL: z.coerce.number().default(86400),
   DISTRIBUTED_LOCK_TTL: z.coerce.number().default(30),
+
+  // ─── Email Configuration ─────────────────────────────────────────
+  EMAIL_PROVIDER: z.enum(['nodemailer', 'sendgrid']).default('nodemailer'),
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_SECURE: z.coerce.boolean().default(false),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
+  SENDGRID_API_KEY: z.string().default(''),
+  EMAIL_FROM_NAME: z.string().default('StarkDCA'),
+  EMAIL_FROM_ADDRESS: z.string().email().default('noreply@starkdca.com'),
+
+  // ─── Google OAuth ────────────────────────────────────────────────
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
+  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:4000/api/v1/auth/google/callback'),
+
+  // ─── Frontend URLs ───────────────────────────────────────────────
+  FRONTEND_URL: z.string().default('http://localhost:3000'),
+
+  // ─── Bcrypt ──────────────────────────────────────────────────────
+  BCRYPT_ROUNDS: z.coerce.number().default(12),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -110,6 +132,40 @@ export const config = {
     planTtl: env.PLAN_CACHE_TTL,
     idempotencyTtl: env.IDEMPOTENCY_TTL,
     lockTtl: env.DISTRIBUTED_LOCK_TTL,
+  },
+
+  email: {
+    provider: env.EMAIL_PROVIDER,
+    smtp: {
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_SECURE,
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS,
+    },
+    sendgrid: {
+      apiKey: env.SENDGRID_API_KEY,
+    },
+    from: {
+      name: env.EMAIL_FROM_NAME,
+      address: env.EMAIL_FROM_ADDRESS,
+    },
+  },
+
+  oauth: {
+    google: {
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      callbackUrl: env.GOOGLE_CALLBACK_URL,
+    },
+  },
+
+  frontend: {
+    url: env.FRONTEND_URL,
+  },
+
+  bcrypt: {
+    rounds: env.BCRYPT_ROUNDS,
   },
 } as const;
 

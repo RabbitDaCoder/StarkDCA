@@ -5,11 +5,25 @@ export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 15_000,
+  withCredentials: true, // Enable cookies for refresh token
 });
 
-// Attach wallet address to requests
+// Attach auth token to requests
 apiClient.interceptors.request.use((config) => {
-  // Lazy import to avoid circular deps — address is read at call time
+  // Try to get token from auth store
+  const authStorage = localStorage.getItem('auth-storage');
+  if (authStorage) {
+    try {
+      const { state } = JSON.parse(authStorage);
+      if (state?.accessToken) {
+        config.headers.Authorization = `Bearer ${state.accessToken}`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  // Also attach wallet address if available (legacy support)
   const address = window.__STARK_DCA_WALLET_ADDRESS__;
   if (address) {
     config.headers['x-starknet-address'] = address;
@@ -17,9 +31,50 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle token refresh on 401
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Try to refresh token
+        const response = await axios.post(
+          `${apiClient.defaults.baseURL}/v1/auth/refresh`,
+          {},
+          { withCredentials: true },
+        );
+
+        const newToken = response.data?.data?.accessToken;
+        if (newToken) {
+          // Update stored token
+          const authStorage = localStorage.getItem('auth-storage');
+          if (authStorage) {
+            const parsed = JSON.parse(authStorage);
+            parsed.state.accessToken = newToken;
+            localStorage.setItem('auth-storage', JSON.stringify(parsed));
+          }
+
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed, clear auth state
+        localStorage.removeItem('auth-storage');
+        window.location.href = '/login';
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export function unwrap<T>(response: { data: ApiResponse<T> }): T {
   if (!response.data.success) {
-    throw new Error((response.data as any).error || 'Request failed');
+    throw new Error((response.data as any).error?.message || 'Request failed');
   }
   return response.data.data;
 }

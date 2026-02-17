@@ -1,4 +1,5 @@
-import { MoreHorizontal, Pause, XCircle } from 'lucide-react';
+import { MoreHorizontal, Pause, XCircle, Repeat } from 'lucide-react';
+import starkDCALogo from '@/assets/starkDCA.png';
 import { PlanStatus, type DCAPlan } from '@stark-dca/shared-types';
 import {
   Table,
@@ -23,14 +24,23 @@ interface Props {
   onCancel: (planId: string) => void;
 }
 
-const statusBadge: Record<
-  PlanStatus,
-  { label: string; variant: 'success' | 'warning' | 'secondary' | 'destructive' }
-> = {
-  [PlanStatus.Active]: { label: 'Active', variant: 'success' },
-  [PlanStatus.Paused]: { label: 'Paused', variant: 'warning' },
-  [PlanStatus.Cancelled]: { label: 'Cancelled', variant: 'destructive' },
-  [PlanStatus.Completed]: { label: 'Completed', variant: 'secondary' },
+const statusBadge: Record<PlanStatus, { label: string; className: string }> = {
+  [PlanStatus.Active]: {
+    label: 'Active',
+    className: 'bg-green-100 text-green-700 border-green-200',
+  },
+  [PlanStatus.Paused]: {
+    label: 'Paused',
+    className: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  },
+  [PlanStatus.Cancelled]: {
+    label: 'Cancelled',
+    className: 'bg-red-100 text-red-700 border-red-200',
+  },
+  [PlanStatus.Completed]: {
+    label: 'Completed',
+    className: 'bg-gray-100 text-gray-700 border-gray-200',
+  },
 };
 
 function planDisplayName(plan: DCAPlan): string {
@@ -41,9 +51,12 @@ function planDisplayName(plan: DCAPlan): string {
 export function PlansTable({ plans, onCancel }: Props) {
   if (plans.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">No DCA plans yet</p>
-        <p className="mt-1 text-xs text-muted-foreground">
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-brand-gray flex items-center justify-center mb-4">
+          <Repeat className="h-8 w-8 text-muted-foreground/50" />
+        </div>
+        <p className="font-heading font-semibold text-brand-blue mb-1">No DCA plans yet</p>
+        <p className="text-sm text-muted-foreground max-w-sm">
           Create your first plan to start accumulating BTC automatically.
         </p>
       </div>
@@ -53,13 +66,13 @@ export function PlansTable({ plans, onCancel }: Props) {
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>Plan</TableHead>
-          <TableHead>Amount</TableHead>
-          <TableHead>Frequency</TableHead>
-          <TableHead>Progress</TableHead>
-          <TableHead>Next Execution</TableHead>
-          <TableHead>Status</TableHead>
+        <TableRow className="bg-brand-gray/50 hover:bg-brand-gray/50">
+          <TableHead className="font-heading text-brand-blue">Plan</TableHead>
+          <TableHead className="font-heading text-brand-blue">Amount</TableHead>
+          <TableHead className="font-heading text-brand-blue">Frequency</TableHead>
+          <TableHead className="font-heading text-brand-blue">Progress</TableHead>
+          <TableHead className="font-heading text-brand-blue">Next Execution</TableHead>
+          <TableHead className="font-heading text-brand-blue">Status</TableHead>
           <TableHead className="w-[50px]" />
         </TableRow>
       </TableHeader>
@@ -72,45 +85,64 @@ export function PlansTable({ plans, onCancel }: Props) {
               : 0;
 
           return (
-            <TableRow key={plan.id}>
-              <TableCell className="font-medium">{planDisplayName(plan)}</TableCell>
-              <TableCell>{formatCurrency(parseFloat(plan.amountPerExecution))}</TableCell>
-              <TableCell className="capitalize">{plan.interval}</TableCell>
+            <TableRow key={plan.id} className="hover:bg-brand-gray/30 transition-colors">
               <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-brand-orange/10 flex items-center justify-center">
+                    <img src={starkDCALogo} alt="" className="h-6 w-auto" />
+                  </div>
+                  <span className="font-medium">{planDisplayName(plan)}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="font-semibold text-gold">
+                  {formatCurrency(parseFloat(plan.amountPerExecution))}
+                </span>
+              </TableCell>
+              <TableCell className="capitalize text-muted-foreground">{plan.interval}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-20 overflow-hidden rounded-full bg-brand-gray">
                     <div
-                      className="h-full rounded-full bg-primary transition-all"
+                      className="h-full rounded-full bg-brand-orange transition-all"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs font-medium text-muted-foreground">
                     {plan.executionsCompleted}/{plan.totalExecutions}
                   </span>
                 </div>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {plan.status === PlanStatus.Active ? timeUntil(plan.nextExecutionAt) : '—'}
+                {plan.status === PlanStatus.Active ? (
+                  <span className="font-medium text-brand-blue">
+                    {timeUntil(plan.nextExecutionAt)}
+                  </span>
+                ) : (
+                  '—'
+                )}
               </TableCell>
               <TableCell>
-                <Badge variant={badge.variant}>{badge.label}</Badge>
+                <Badge variant="outline" className={badge.className}>
+                  {badge.label}
+                </Badge>
               </TableCell>
               <TableCell>
                 {plan.status === PlanStatus.Active && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-brand-gray">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem disabled>
+                      <DropdownMenuItem disabled className="text-muted-foreground">
                         <Pause className="mr-2 h-4 w-4" />
-                        Pause
+                        Pause Plan
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onCancel(plan.id)}
-                        className="text-destructive"
+                        className="text-destructive focus:bg-destructive/10"
                       >
                         <XCircle className="mr-2 h-4 w-4" />
                         Cancel Plan

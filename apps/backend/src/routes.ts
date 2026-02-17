@@ -5,6 +5,8 @@ import { Router } from 'express';
 import { authRoutes } from './modules/auth';
 import { dcaRoutes } from './modules/dca';
 import { priceRoutes } from './modules/price';
+import { waitlistRoutes } from './modules/waitlist';
+import { adminRoutes } from './modules/admin';
 import { successResponse } from './utils/response';
 
 const router = Router();
@@ -34,5 +36,7 @@ router.get('/health', (_req, res) => {
 router.use('/auth', authRoutes);
 router.use('/plans', dcaRoutes);
 router.use('/price', priceRoutes);
+router.use('/waitlist', waitlistRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;

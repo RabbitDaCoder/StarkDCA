@@ -4,39 +4,49 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 224 30% 8%;
+    /* Brand Colors (for reference):
+     * Deep Royal Blue: #1F3878 → hsl(222, 59%, 29%)
+     * Vibrant Orange: #FE6606 → hsl(24, 99%, 51%)
+     * Mustard Gold: #CDA41B → hsl(46, 79%, 45%)
+     * Soft Light Gray: #F4F4F4 → hsl(0, 0%, 96%)
+     */
+
+    --background: 0 0% 100%;
+    --foreground: 222 59% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 30% 8%;
+    --card-foreground: 222 59% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 30% 8%;
+    --popover-foreground: 222 59% 15%;
 
-    --primary: 28 93% 53%;
+    /* Primary is Orange (CTA) */
+    --primary: 24 99% 51%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 224 20% 20%;
+    /* Secondary is Light Gray */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 222 59% 29%;
 
-    --muted: 220 14% 96%;
+    --muted: 0 0% 96%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 224 20% 20%;
+    --accent: 222 59% 29%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 28 93% 53%;
+    --ring: 24 99% 51%;
     --radius: 0.5rem;
 
-    --sidebar: 224 30% 8%;
-    --sidebar-foreground: 220 14% 82%;
-    --sidebar-border: 220 16% 16%;
-    --sidebar-accent: 220 16% 14%;
+    /* Sidebar uses Deep Royal Blue */
+    --sidebar: 222 59% 29%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-border: 222 50% 22%;
+    --sidebar-accent: 24 99% 51%;
   }
 }
 
@@ -50,6 +60,15 @@
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
   }
 }
 
@@ -66,4 +85,35 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.35);
+}
+
+/* Utility Classes */
+@layer utilities {
+  .text-gold {
+    color: #cda41b;
+  }
+
+  .bg-brand-blue {
+    background-color: #1f3878;
+  }
+
+  .text-brand-blue {
+    color: #1f3878;
+  }
+
+  .bg-brand-orange {
+    background-color: #fe6606;
+  }
+
+  .text-brand-orange {
+    color: #fe6606;
+  }
+
+  .gradient-hero {
+    background: linear-gradient(135deg, #1f3878 0%, #162854 100%);
+  }
+
+  .gradient-glow {
+    background: radial-gradient(ellipse at center, rgba(254, 102, 6, 0.15) 0%, transparent 70%);
+  }
 }

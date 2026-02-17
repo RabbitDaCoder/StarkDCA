@@ -1,0 +1,235 @@
+// ─── Admin Controller ────────────────────────────────────────────────
+// HTTP handlers for admin operations.
+
+import { Request, Response, NextFunction } from 'express';
+import { adminService } from './admin.service';
+import { successResponse } from '../../utils/response';
+import type { GetWaitlistUsersInput, SendEmailInput, SendBulkEmailInput } from './admin.schema';
+
+/**
+ * @swagger
+ * /api/v1/admin/waitlist:
+ *   get:
+ *     summary: Get all waitlist users (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, name, email]
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Paginated list of waitlist users
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin only
+ */
+export async function getWaitlistUsers(
+  req: Request<unknown, unknown, unknown, GetWaitlistUsersInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const result = await adminService.getWaitlistUsers(req.query || {});
+    res.json(successResponse(result));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * /api/v1/admin/users:
+ *   get:
+ *     summary: Get all registered users (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Paginated list of users
+ */
+export async function getUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await adminService.getUsers(req.query as any);
+    res.json(successResponse(result));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * /api/v1/admin/waitlist/export:
+ *   get:
+ *     summary: Export waitlist as CSV (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: CSV file download
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ */
+export async function exportWaitlistCsv(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const csv = await adminService.exportWaitlistCsv();
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=waitlist-${new Date().toISOString().split('T')[0]}.csv`,
+    );
+    res.send(csv);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * /api/v1/admin/email/send:
+ *   post:
+ *     summary: Send email to specific recipients (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - recipients
+ *               - subject
+ *             properties:
+ *               recipients:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: email
+ *               subject:
+ *                 type: string
+ *               template:
+ *                 type: string
+ *                 enum: [announcement, launch]
+ *               variables:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Email send result
+ */
+export async function sendEmail(
+  req: Request<unknown, unknown, SendEmailInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const result = await adminService.sendEmail(req.body);
+    res.json(successResponse(result));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * /api/v1/admin/email/bulk:
+ *   post:
+ *     summary: Send bulk email to waitlist (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - subject
+ *             properties:
+ *               filter:
+ *                 type: string
+ *                 enum: [all, recent, custom]
+ *               recentDays:
+ *                 type: integer
+ *               subject:
+ *                 type: string
+ *               template:
+ *                 type: string
+ *                 enum: [announcement, launch]
+ *               variables:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Bulk email result
+ */
+export async function sendBulkEmail(
+  req: Request<unknown, unknown, SendBulkEmailInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const result = await adminService.sendBulkEmail(req.body);
+    res.json(successResponse(result));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * /api/v1/admin/stats:
+ *   get:
+ *     summary: Get admin dashboard statistics
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics
+ */
+export async function getDashboardStats(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const stats = await adminService.getDashboardStats();
+    res.json(successResponse(stats));
+  } catch (error) {
+    next(error);
+  }
+}
