@@ -17,6 +17,5 @@
       "@stark-dca/shared-types": ["../../packages/shared-types/src/index.ts"]
     }
   },
-  "include": ["src", "vite-env.d.ts"],
-  "references": [{ "path": "../../packages/shared-types" }]
+  "include": ["src", "vite-env.d.ts"]
 }
