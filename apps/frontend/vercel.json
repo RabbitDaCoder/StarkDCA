@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build -w apps/frontend",
-  "outputDirectory": "apps/frontend/dist",
+  "installCommand": "npm install --prefix ../.. --install-strategy=hoisted",
+  "buildCommand": "npx vite build",
+  "outputDirectory": "dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
