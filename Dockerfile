@@ -36,8 +36,8 @@ RUN npm prune --production --workspace=packages/shared-types --workspace=apps/ba
 # ─── Stage 2: Production ─────────────────────────────────────────────
 FROM node:20-alpine AS production
 
-# Security: add tini for proper PID 1 signal handling
-RUN apk add --no-cache tini curl
+# Security: add tini for proper PID 1 signal handling, openssl for Prisma
+RUN apk add --no-cache tini curl openssl
 
 WORKDIR /app
 
