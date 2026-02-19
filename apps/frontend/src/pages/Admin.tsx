@@ -114,8 +114,9 @@ export default function Admin() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchStatus, setLaunchStatus] = useState<{
     launched: boolean;
-    launchedAt?: string;
-    emailProgress?: { sent: number; total: number; failed: number };
+    launchedAt: string | null;
+    launchedBy?: string | null;
+    emailProgress?: { sent: number; total: number; failed: number; inProgress?: boolean };
   } | null>(null);
   const [launchConfirmText, setLaunchConfirmText] = useState('');
 

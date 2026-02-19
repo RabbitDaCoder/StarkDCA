@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useDcaStore } from '@/store/dca.store';
 import { useWalletStore } from '@/store/wallet.store';
-import { PlanStatus } from '@stark-dca/shared-types';
+import { PlanStatus, Interval } from '@stark-dca/shared-types';
 import type { DashboardSummary } from '../types';
 
 // Realistic preview data for when API is not connected
@@ -15,7 +15,7 @@ const DEMO_PLANS = [
     totalDeposited: '1000',
     totalExecutions: 10,
     executionsCompleted: 4,
-    interval: 'weekly' as const,
+    interval: Interval.Weekly,
     nextExecutionAt: Date.now() + 9_240_000, // ~2.5 hours
     status: PlanStatus.Active,
     createdAt: Date.now() - 2_419_200_000,
@@ -30,7 +30,7 @@ const DEMO_PLANS = [
     totalDeposited: '6000',
     totalExecutions: 12,
     executionsCompleted: 7,
-    interval: 'monthly' as const,
+    interval: Interval.Monthly,
     nextExecutionAt: Date.now() + 1_296_000_000, // ~15 days
     status: PlanStatus.Active,
     createdAt: Date.now() - 18_144_000_000,
@@ -45,7 +45,7 @@ const DEMO_PLANS = [
     totalDeposited: '750',
     totalExecutions: 30,
     executionsCompleted: 18,
-    interval: 'daily' as const,
+    interval: Interval.Daily,
     nextExecutionAt: Date.now() + 43_200_000, // ~12 hours
     status: PlanStatus.Active,
     createdAt: Date.now() - 1_555_200_000,
