@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nodemon src/server.ts",
+    "dev:worker": "nodemon --exec 'ts-node --transpile-only src/worker.ts' --watch src --ext ts,json --ignore 'src/**/__tests__/**'",
     "build": "tsc",
     "start": "node dist/server.js",
     "start:worker": "node dist/worker.js",

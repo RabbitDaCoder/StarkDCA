@@ -68,6 +68,14 @@ const envSchema = z.object({
 
   // ─── Bcrypt ──────────────────────────────────────────────────────
   BCRYPT_ROUNDS: z.coerce.number().default(12),
+
+  // ─── Worker / Cron ───────────────────────────────────────────────
+  // Set to "false" to disable in-process cron (production web server).
+  // The dedicated worker process ignores this flag.
+  ENABLE_CRON: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -167,6 +175,8 @@ export const config = {
   bcrypt: {
     rounds: env.BCRYPT_ROUNDS,
   },
+
+  enableCron: env.ENABLE_CRON,
 } as const;
 
 export type Config = typeof config;

@@ -9,7 +9,6 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  setupFilesAfterSetup: [],
   clearMocks: true,
   restoreMocks: true,
 };

@@ -74,8 +74,7 @@ async function bootstrap(): Promise<void> {
 
       // In production, cron runs in a dedicated worker service.
       // For local dev, cron runs in the same process for convenience.
-      const enableCron = process.env.ENABLE_CRON !== 'false';
-      if (enableCron) {
+      if (config.enableCron) {
         startDcaCron();
         logger.info('DCA cron scheduler started (in-process)');
       } else {

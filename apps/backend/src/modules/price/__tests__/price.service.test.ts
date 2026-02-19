@@ -9,13 +9,13 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 const mockCacheGet = jest.fn();
 const mockCacheSet = jest.fn();
 
-jest.mock('../../infrastructure/redis', () => ({
+jest.mock('../../../infrastructure/redis', () => ({
   cacheGet: (...args: any[]) => mockCacheGet(...args),
   cacheSet: (...args: any[]) => mockCacheSet(...args),
   cacheDel: jest.fn(),
 }));
 
-jest.mock('../../config', () => ({
+jest.mock('../../../config', () => ({
   config: {
     price: {
       apiUrl: 'https://api.coingecko.com/api/v3',
@@ -26,7 +26,7 @@ jest.mock('../../config', () => ({
   },
 }));
 
-jest.mock('../../infrastructure/logger', () => ({
+jest.mock('../../../infrastructure/logger', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -35,7 +35,7 @@ jest.mock('../../infrastructure/logger', () => ({
   },
 }));
 
-import { priceService } from '../price/price.service';
+import { priceService } from '../price.service';
 
 describe('PriceService', () => {
   beforeEach(() => {

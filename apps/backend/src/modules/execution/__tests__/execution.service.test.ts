@@ -13,7 +13,7 @@ const mockRedisSet = jest.fn().mockResolvedValue('OK');
 const mockRedisEval = jest.fn().mockResolvedValue(1);
 const mockRedisKeys = jest.fn().mockResolvedValue([]);
 
-jest.mock('../../infrastructure/redis', () => ({
+jest.mock('../../../infrastructure/redis', () => ({
   getRedis: () => ({
     get: mockRedisGet,
     setex: mockRedisSetex,
@@ -31,7 +31,7 @@ jest.mock('../../infrastructure/redis', () => ({
 }));
 
 // Mock config
-jest.mock('../../config', () => ({
+jest.mock('../../../config', () => ({
   config: {
     cache: { lockTtl: 30, priceTtl: 60, planTtl: 30, idempotencyTtl: 86400 },
     price: { apiUrl: 'https://api.coingecko.com/api/v3', apiKey: '', cacheTtl: 60 },
@@ -42,7 +42,7 @@ jest.mock('../../config', () => ({
 }));
 
 // Mock logger
-jest.mock('../../infrastructure/logger', () => ({
+jest.mock('../../../infrastructure/logger', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -53,7 +53,7 @@ jest.mock('../../infrastructure/logger', () => ({
 }));
 
 // Mock price service
-jest.mock('../price/price.service', () => ({
+jest.mock('../../price/price.service', () => ({
   priceService: {
     getBtcPrice: jest.fn().mockResolvedValue({
       symbol: 'BTC',
@@ -102,7 +102,7 @@ const mockTx = {
   },
 };
 
-jest.mock('../../infrastructure/db', () => ({
+jest.mock('../../../infrastructure/db', () => ({
   prisma: {
     $transaction: jest.fn(async (fn: any) => fn(mockTx)),
     $connect: jest.fn(),
@@ -113,7 +113,7 @@ jest.mock('../../infrastructure/db', () => ({
 }));
 
 // Mock DCA service (for getDuePlans)
-jest.mock('../dca/dca.service', () => ({
+jest.mock('../../dca/dca.service', () => ({
   dcaService: {
     getDuePlans: jest.fn().mockResolvedValue([{ id: 'plan-uuid-1' }]),
     computeNextExecution: jest.fn().mockReturnValue(new Date(Date.now() + 604_800_000)),
@@ -122,7 +122,7 @@ jest.mock('../dca/dca.service', () => ({
 
 // ─── Tests ───────────────────────────────────────────────────────────
 
-import { executionService } from '../execution/execution.service';
+import { executionService } from '../execution.service';
 
 describe('ExecutionService', () => {
   beforeEach(() => {
