@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@stark-dca/shared-types': path.resolve(
+        __dirname,
+        '../../packages/shared-types/src/index.ts',
+      ),
       ws: path.resolve(__dirname, './src/lib/ws-shim.ts'),
     },
   },
