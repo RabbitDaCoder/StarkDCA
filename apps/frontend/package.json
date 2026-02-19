@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "cd ../../packages/shared-types && npx tsc && cd ../../apps/frontend && tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
