@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import starkDCALogo from '@/assets/starkDCA.png';
+import { waitlistApi } from '@/services/api/waitlist';
 
 // Team members data
 const teamMembers = [
@@ -163,17 +164,14 @@ const leaderboardData = [
 
 export default function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [stats, setStats] = useState({ users: 2847, funded: 1250000 });
+  const [userCount, setUserCount] = useState<number>(0);
 
-  // Update stats (simulated real-time)
+  // Fetch real user count from API
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStats((prev) => ({
-        users: prev.users + Math.floor(Math.random() * 2),
-        funded: prev.funded + Math.floor(Math.random() * 1000),
-      }));
-    }, 5000);
-    return () => clearInterval(interval);
+    waitlistApi
+      .getStats()
+      .then((data) => setUserCount(data.totalCount))
+      .catch(() => {});
   }, []);
 
   return (
@@ -283,18 +281,20 @@ export default function Landing() {
               {/* Social proof */}
               <div className="flex items-center gap-6 pt-4">
                 <div className="flex -space-x-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
+                  {Array.from({ length: Math.min(userCount, 5) }, (_, i) => (
                     <div
                       key={i}
                       className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange to-brand-gold flex items-center justify-center border-2 border-brand-blue"
                     >
-                      <span className="text-white text-xs font-bold">{i}</span>
+                      <span className="text-white text-xs font-bold">
+                        {userCount > 5 ? i + 1 : i + 1}
+                      </span>
                     </div>
                   ))}
                 </div>
                 <div>
                   <p className="text-white font-semibold">
-                    {stats.users.toLocaleString()}+ Investors
+                    {userCount > 0 ? `${userCount.toLocaleString()}+` : '—'} Investors
                   </p>
                   <p className="text-white/60 text-sm">Already on the waitlist</p>
                 </div>
@@ -358,7 +358,7 @@ export default function Landing() {
                 <Users className="h-6 w-6 text-brand-blue" />
               </div>
               <p className="text-3xl font-heading font-bold text-gold">
-                {stats.users.toLocaleString()}
+                {userCount > 0 ? userCount.toLocaleString() : '—'}
               </p>
               <p className="text-sm text-muted-foreground mt-1">Total Users</p>
             </div>
@@ -366,9 +366,7 @@ export default function Landing() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-brand-blue/10 mb-4">
                 <DollarSign className="h-6 w-6 text-brand-blue" />
               </div>
-              <p className="text-3xl font-heading font-bold text-gold">
-                ${(stats.funded / 1000000).toFixed(2)}M
-              </p>
+              <p className="text-3xl font-heading font-bold text-gold">$0.00M</p>
               <p className="text-sm text-muted-foreground mt-1">Total Funded</p>
             </div>
             <div className="text-center">

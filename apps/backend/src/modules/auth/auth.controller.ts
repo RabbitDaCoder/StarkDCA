@@ -177,6 +177,46 @@ class AuthController {
     }
   }
 
+  /**
+   * POST /api/v1/auth/verify-otp
+   * Verify OTP code for email verification.
+   * After success: adds user to waitlist and sends confirmation email.
+   */
+  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { otp } = req.body;
+      const userId = req.user!.userId;
+
+      const result = await authService.verifyOtp(userId, otp);
+
+      res.json(
+        successResponse({
+          verified: result.verified,
+          waitlistPosition: result.waitlistPosition,
+          totalUsers: result.totalUsers,
+          redirectTo: '/waitlist',
+        }),
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/resend-otp
+   * Resend OTP verification code. Rate limited.
+   */
+  async resendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user!.userId;
+      const result = await authService.resendOtp(userId);
+
+      res.json(successResponse({ message: 'Verification code sent', ...result }));
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ─── Private Helpers ─────────────────────────────────────────────
 
   private setRefreshTokenCookie(res: Response, refreshToken: string): void {

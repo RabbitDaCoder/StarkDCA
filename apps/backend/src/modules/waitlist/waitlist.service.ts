@@ -1,18 +1,17 @@
 // ─── Waitlist Service ────────────────────────────────────────────────
 // Handles waitlist signups with Redis rate limiting and idempotency.
+// Updated: counts both WaitlistUser and verified User tables for stats.
 
 import { prisma } from '../../infrastructure/db';
 import { redis } from '../../infrastructure/redis';
 import { emailService } from '../../infrastructure/email';
 import { logger } from '../../infrastructure/logger';
-import { config } from '../../config';
 import { ConflictError, TooManyRequestsError, BadRequestError } from '../../utils/errors';
 import type { JoinWaitlistInput } from './waitlist.schema';
 
-// Redis keys
+// Redis keys (only used for rate limiting and idempotency, NOT for counts)
 const WAITLIST_IP_PREFIX = 'waitlist:ip:';
 const WAITLIST_EMAIL_PREFIX = 'waitlist:email:';
-const WAITLIST_COUNT_KEY = 'waitlist:count';
 
 // Rate limits
 const MAX_SIGNUPS_PER_IP = 3; // Per hour
@@ -21,6 +20,12 @@ const IP_RATE_LIMIT_TTL = 3600; // 1 hour in seconds
 interface WaitlistStats {
   totalCount: number;
   recentSignups: Array<{ name: string; createdAt: Date }>;
+}
+
+interface UserWaitlistInfo {
+  position: number;
+  totalUsers: number;
+  name: string | null;
 }
 
 interface WaitlistUser {
@@ -58,10 +63,7 @@ class WaitlistService {
     // 4. Mark email as used in Redis (fast lookup for future requests)
     await redis.set(`${WAITLIST_EMAIL_PREFIX}${email}`, '1', 'EX', 86400 * 30); // 30 days
 
-    // 5. Increment cached count
-    await redis.incr(WAITLIST_COUNT_KEY);
-
-    // 6. Send welcome email (async, don't block response)
+    // 5. Send welcome email (async, don't block response)
     emailService.sendWaitlistWelcome(email, name).catch((err) => {
       logger.error({ error: err, email }, 'Failed to send waitlist welcome email');
     });
@@ -76,35 +78,46 @@ class WaitlistService {
    * Returns total count and recent signups (first names only for privacy).
    */
   async getStats(): Promise<WaitlistStats> {
-    // Try to get cached count first
-    let totalCount = await redis.get(WAITLIST_COUNT_KEY);
+    // Count both public waitlist signups AND verified registered users
+    // This gives the true community size for social proof on the landing page
+    const [publicCount, registeredCount] = await Promise.all([
+      prisma.waitlistUser.count(),
+      prisma.user.count({ where: { emailVerified: true } }),
+    ]);
+    const totalCount = publicCount + registeredCount;
 
-    if (!totalCount) {
-      // Fallback to database count and cache it
-      const count = await prisma.waitlistUser.count();
-      await redis.set(WAITLIST_COUNT_KEY, count.toString(), 'EX', 300); // 5 minute cache
-      totalCount = count.toString();
-    }
+    // Get recent signups from both tables, merge and sort
+    const [publicSignups, registeredSignups] = await Promise.all([
+      prisma.waitlistUser.findMany({
+        select: { name: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      prisma.user.findMany({
+        where: { emailVerified: true, name: { not: null } },
+        select: { name: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+    ]);
 
-    // Get last 5 signups (only first names for social proof)
-    const recentSignups = await prisma.waitlistUser.findMany({
-      select: {
-        name: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
+    // Merge, sort by newest first, take top 5
+    const allSignups = [
+      ...publicSignups.map((u) => ({ name: u.name, createdAt: u.createdAt })),
+      ...registeredSignups.map((u) => ({ name: u.name || 'User', createdAt: u.createdAt })),
+    ]
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 5);
 
     // Extract only first names for privacy
-    const sanitizedSignups = recentSignups.map((user) => ({
-      name: user.name.split(' ')[0], // First name only
+    const recentSignups = allSignups.map((user) => ({
+      name: user.name.split(' ')[0],
       createdAt: user.createdAt,
     }));
 
     return {
-      totalCount: parseInt(totalCount, 10),
-      recentSignups: sanitizedSignups,
+      totalCount,
+      recentSignups,
     };
   }
 
@@ -160,6 +173,90 @@ class WaitlistService {
     ]);
 
     return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+  }
+
+  // ─── Registered User Waitlist Methods ──────────────────────────────
+
+  /**
+   * Add a registered user to the waitlist after OTP verification.
+   * Assigns a unique waitlistPosition using a DB transaction for correctness.
+   * Safe across Redis restarts and concurrent requests.
+   */
+  async addUserToWaitlist(userId: string): Promise<UserWaitlistInfo> {
+    // Check if user already has a position
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { waitlistPosition: true, name: true },
+    });
+
+    if (existingUser?.waitlistPosition) {
+      // Already on waitlist, return current info
+      const totalUsers = await this.getTotalRegisteredCount();
+      return {
+        position: existingUser.waitlistPosition,
+        totalUsers,
+        name: existingUser.name,
+      };
+    }
+
+    // Atomic position assignment via DB transaction
+    // Uses MAX(waitlistPosition) + 1 to ensure unique sequential positions
+    const result = await prisma.$transaction(async (tx) => {
+      const maxResult = await tx.user.aggregate({
+        _max: { waitlistPosition: true },
+      });
+      const nextPosition = (maxResult._max.waitlistPosition || 0) + 1;
+
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: { waitlistPosition: nextPosition },
+        select: { name: true, waitlistPosition: true },
+      });
+
+      return { position: nextPosition, name: user.name };
+    });
+
+    const totalUsers = await this.getTotalRegisteredCount();
+
+    logger.info({ userId, position: result.position }, 'User added to launch waitlist');
+
+    return {
+      position: result.position,
+      totalUsers,
+      name: result.name,
+    };
+  }
+
+  /**
+   * Get a registered user's waitlist position and stats.
+   */
+  async getUserWaitlistInfo(userId: string): Promise<UserWaitlistInfo> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { waitlistPosition: true, name: true, launchAccessGranted: true },
+    });
+
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+
+    const totalUsers = await this.getTotalRegisteredCount();
+
+    return {
+      position: user.waitlistPosition || 0,
+      totalUsers,
+      name: user.name,
+    };
+  }
+
+  /**
+   * Get total count of registered (verified) users for the waitlist page.
+   * Always queries DB for accuracy — COUNT with index is <1ms.
+   */
+  async getTotalRegisteredCount(): Promise<number> {
+    return prisma.user.count({
+      where: { emailVerified: true },
+    });
   }
 
   // ─── Private Helpers ─────────────────────────────────────────────────

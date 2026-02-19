@@ -17,6 +17,23 @@ interface RefreshResponse {
   accessToken: string;
 }
 
+interface UserProfile {
+  id: string;
+  name: string | null;
+  email: string | null;
+  role: string;
+  emailVerified: boolean;
+  launchAccessGranted: boolean;
+  waitlistPosition: number | null;
+}
+
+interface VerifyOtpResponse {
+  verified: boolean;
+  waitlistPosition: number;
+  totalUsers: number;
+  redirectTo: string;
+}
+
 export const authApi = {
   async signup(name: string, email: string, password: string): Promise<AuthResponse> {
     const response = await apiClient.post('/v1/auth/signup', { name, email, password });
@@ -37,8 +54,18 @@ export const authApi = {
     return unwrap(response);
   },
 
-  async getProfile(): Promise<AuthResponse['user']> {
+  async getProfile(): Promise<UserProfile> {
     const response = await apiClient.get('/v1/auth/me');
+    return unwrap(response);
+  },
+
+  async verifyOtp(otp: string): Promise<VerifyOtpResponse> {
+    const response = await apiClient.post('/v1/auth/verify-otp', { otp });
+    return unwrap(response);
+  },
+
+  async resendOtp(): Promise<{ sent: boolean; message: string }> {
+    const response = await apiClient.post('/v1/auth/resend-otp');
     return unwrap(response);
   },
 

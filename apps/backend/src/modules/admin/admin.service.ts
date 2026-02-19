@@ -220,24 +220,27 @@ class AdminService {
    * Get dashboard stats for admin.
    */
   async getDashboardStats() {
-    const [totalWaitlist, totalUsers, waitlistToday, usersToday] = await Promise.all([
-      prisma.waitlistUser.count(),
-      prisma.user.count(),
-      prisma.waitlistUser.count({
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+    const [totalWaitlist, totalUsers, verifiedUsers, waitlistToday, usersToday] = await Promise.all(
+      [
+        prisma.waitlistUser.count(),
+        prisma.user.count(),
+        prisma.user.count({ where: { emailVerified: true } }),
+        prisma.waitlistUser.count({
+          where: {
+            createdAt: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            },
           },
-        },
-      }),
-      prisma.user.count({
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        }),
+        prisma.user.count({
+          where: {
+            createdAt: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            },
           },
-        },
-      }),
-    ]);
+        }),
+      ],
+    );
 
     // Get signups by day for last 7 days
     const sevenDaysAgo = new Date();
@@ -255,6 +258,7 @@ class AdminService {
     return {
       totalWaitlist,
       totalUsers,
+      verifiedUsers,
       waitlistToday,
       usersToday,
       recentTrend: waitlistByDay,

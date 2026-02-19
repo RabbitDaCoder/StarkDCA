@@ -1,0 +1,142 @@
+# ─── StarkDCA — Render Infrastructure Blueprint ──────────────────────
+# Deploy with: render blueprint apply (or connect repo in Render dashboard)
+#
+# Architecture:
+#   Web Service    → Express API (Dockerfile, no cron)
+#   Worker Service → DCA cron executor (same Dockerfile, different CMD)
+#   PostgreSQL     → Managed by Render
+#   Redis          → External (Upstash) — configured via REDIS_URL env var
+
+services:
+  # ─── Web Service (API) ──────────────────────────────────────────────
+  - type: web
+    name: starkdca-api
+    runtime: docker
+    region: oregon
+    plan: starter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    numInstances: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '4000'
+      - key: ENABLE_CRON
+        value: 'false' # Cron runs in the worker service
+      - key: DATABASE_URL
+        fromDatabase:
+          name: starkdca-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false # Set manually — Upstash Redis URL
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false # Set to your Vercel frontend URL
+      - key: FRONTEND_URL
+        sync: false
+      - key: STARKNET_RPC_URL
+        sync: false
+      - key: DCA_CONTRACT_ADDRESS
+        sync: false
+      - key: EXECUTOR_PRIVATE_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: BCRYPT_ROUNDS
+        value: '12'
+    buildFilter:
+      paths:
+        - apps/backend/**
+        - packages/shared-types/**
+        - Dockerfile
+        - package.json
+    preDeployCommand: 'npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma'
+
+  # ─── Worker Service (DCA Cron Executor) ─────────────────────────────
+  - type: worker
+    name: starkdca-worker
+    runtime: docker
+    region: oregon
+    plan: starter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: node apps/backend/dist/worker.js
+    numInstances: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: starkdca-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false
+      - key: STARKNET_RPC_URL
+        sync: false
+      - key: DCA_CONTRACT_ADDRESS
+        sync: false
+      - key: EXECUTOR_PRIVATE_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # Worker needs JWT secrets for config validation
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: '*'
+      - key: FRONTEND_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: BCRYPT_ROUNDS
+        value: '12'
+    buildFilter:
+      paths:
+        - apps/backend/**
+        - packages/shared-types/**
+        - Dockerfile
+        - package.json
+
+# ─── Databases ────────────────────────────────────────────────────────
+databases:
+  - name: starkdca-db
+    plan: starter
+    region: oregon
+    databaseName: starkdca
+    user: starkdca
+    ipAllowList: [] # Only allow internal Render connections

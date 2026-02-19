@@ -18,6 +18,10 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  Rocket,
+  AlertTriangle,
+  CheckCircle2,
+  ShieldCheck,
 } from 'lucide-react';
 import starkDCALogo from '@/assets/starkDCA.png';
 import { Button } from '@/components/ui/button';
@@ -65,6 +69,7 @@ interface AdminStats {
   totalUsers: number;
   waitlistToday: number;
   usersToday: number;
+  verifiedUsers?: number;
 }
 
 const sidebarLinks = [
@@ -104,6 +109,16 @@ export default function Admin() {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailResult, setEmailResult] = useState<{ success: number; failed: number } | null>(null);
 
+  // Launch state
+  const [isLaunchModalOpen, setIsLaunchModalOpen] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [launchStatus, setLaunchStatus] = useState<{
+    launched: boolean;
+    launchedAt?: string;
+    emailProgress?: { sent: number; total: number; failed: number };
+  } | null>(null);
+  const [launchConfirmText, setLaunchConfirmText] = useState('');
+
   // Fetch data on mount and when filters change
   useEffect(() => {
     const fetchData = async () => {
@@ -131,6 +146,49 @@ export default function Admin() {
 
     fetchData();
   }, [currentPage, sortBy, sortOrder, searchQuery]);
+
+  // Fetch launch status on mount
+  useEffect(() => {
+    adminApi
+      .getLaunchStatus()
+      .then(setLaunchStatus)
+      .catch(() => {});
+  }, []);
+
+  // Handle platform launch
+  const handleLaunchPlatform = async () => {
+    setIsLaunching(true);
+    try {
+      const result = await adminApi.launchPlatform();
+      setLaunchStatus({
+        launched: true,
+        launchedAt: new Date().toISOString(),
+        emailProgress: { sent: 0, total: result.usersUpdated, failed: 0 },
+      });
+      setIsLaunchModalOpen(false);
+      setLaunchConfirmText('');
+
+      // Poll for email progress
+      const pollInterval = setInterval(async () => {
+        try {
+          const status = await adminApi.getLaunchStatus();
+          setLaunchStatus(status);
+          if (
+            status.emailProgress &&
+            status.emailProgress.sent + status.emailProgress.failed >= status.emailProgress.total
+          ) {
+            clearInterval(pollInterval);
+          }
+        } catch {
+          clearInterval(pollInterval);
+        }
+      }, 5000);
+    } catch (error) {
+      console.error('Failed to launch platform:', error);
+    } finally {
+      setIsLaunching(false);
+    }
+  };
 
   // Handle CSV export
   const handleExportCsv = async () => {
@@ -255,6 +313,104 @@ export default function Admin() {
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </Button>
+
+            {/* Launch Platform Button */}
+            <Dialog open={isLaunchModalOpen} onOpenChange={setIsLaunchModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  className={
+                    launchStatus?.launched
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-brand-blue hover:bg-brand-blue/90'
+                  }
+                  disabled={launchStatus?.launched}
+                >
+                  <Rocket className="h-4 w-4 mr-2" />
+                  {launchStatus?.launched ? 'Launched' : 'Launch Platform'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="font-heading text-brand-blue flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-brand-orange" />
+                    Launch Platform
+                  </DialogTitle>
+                  <DialogDescription>
+                    This action is <span className="font-bold text-destructive">irreversible</span>.
+                    It will grant dashboard access to all verified users and send launch
+                    notification emails.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-2">
+                  <div className="bg-brand-orange/5 border border-brand-orange/20 rounded-lg p-4">
+                    <h4 className="font-semibold text-brand-blue text-sm mb-2">This will:</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        Grant dashboard access to {stats?.verifiedUsers ||
+                          stats?.totalUsers ||
+                          0}{' '}
+                        verified users
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        Send launch notification emails to all users
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        Unlock the user dashboard permanently
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-brand-blue text-sm">
+                      Type <span className="font-bold font-mono">LAUNCH</span> to confirm
+                    </Label>
+                    <Input
+                      value={launchConfirmText}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setLaunchConfirmText(e.target.value)
+                      }
+                      placeholder="Type LAUNCH"
+                      className="border-2 focus:border-brand-orange font-mono"
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsLaunchModalOpen(false);
+                      setLaunchConfirmText('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleLaunchPlatform}
+                    disabled={isLaunching || launchConfirmText !== 'LAUNCH'}
+                    className="bg-brand-orange hover:bg-brand-orange/90"
+                  >
+                    {isLaunching ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Launching...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="mr-2 h-4 w-4" />
+                        Launch Now
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90">
@@ -411,7 +567,7 @@ export default function Admin() {
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">
           <div className="max-w-[1400px] mx-auto space-y-8">
             {/* Stats Cards */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -489,6 +645,29 @@ export default function Admin() {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-2">
+                        Verified Users
+                      </p>
+                      <p className="text-3xl font-heading font-bold text-gold">
+                        {isLoading ? (
+                          <Loader2 className="h-8 w-8 animate-spin text-brand-orange" />
+                        ) : (
+                          (stats?.verifiedUsers ?? stats?.totalUsers ?? 0).toLocaleString()
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Email confirmed</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-green-100">
+                      <ShieldCheck className="h-6 w-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">
                         Total Revenue
                       </p>
                       <p className="text-3xl font-heading font-bold text-gold">$0</p>
@@ -501,6 +680,60 @@ export default function Admin() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Launch Status Banner */}
+            {launchStatus?.launched && (
+              <Card className="border-0 shadow-lg border-l-4 border-l-green-500">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-green-100">
+                        <Rocket className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-heading font-bold text-brand-blue text-lg">
+                          Platform Launched!
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Launched on{' '}
+                          {launchStatus.launchedAt
+                            ? new Date(launchStatus.launchedAt).toLocaleString()
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {launchStatus.emailProgress && (
+                      <div className="flex items-center gap-6">
+                        <div className="text-center">
+                          <p className="text-2xl font-heading font-bold text-green-600">
+                            {launchStatus.emailProgress.sent}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Emails Sent</p>
+                        </div>
+                        {launchStatus.emailProgress.failed > 0 && (
+                          <div className="text-center">
+                            <p className="text-2xl font-heading font-bold text-destructive">
+                              {launchStatus.emailProgress.failed}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Failed</p>
+                          </div>
+                        )}
+                        <div className="text-center">
+                          <p className="text-2xl font-heading font-bold text-brand-blue">
+                            {launchStatus.emailProgress.total}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Total</p>
+                        </div>
+                        {launchStatus.emailProgress.sent < launchStatus.emailProgress.total && (
+                          <Loader2 className="h-5 w-5 animate-spin text-brand-orange" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Waitlist Table */}
             <Card className="border-0 shadow-lg">

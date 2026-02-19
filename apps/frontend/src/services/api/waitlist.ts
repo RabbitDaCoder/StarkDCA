@@ -18,6 +18,12 @@ interface JoinWaitlistResponse {
   message: string;
 }
 
+export interface UserWaitlistInfo {
+  position: number;
+  totalUsers: number;
+  name: string | null;
+}
+
 export const waitlistApi = {
   async join(name: string, email: string, source?: string): Promise<JoinWaitlistResponse> {
     const response = await apiClient.post('/v1/waitlist/join', { name, email, source });
@@ -26,6 +32,11 @@ export const waitlistApi = {
 
   async getStats(): Promise<WaitlistStats> {
     const response = await apiClient.get('/v1/waitlist/stats');
+    return unwrap(response);
+  },
+
+  async getUserWaitlistInfo(): Promise<UserWaitlistInfo> {
+    const response = await apiClient.get('/v1/waitlist/me');
     return unwrap(response);
   },
 };

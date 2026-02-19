@@ -3,7 +3,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { adminService } from './admin.service';
+import { launchService } from './launch.service';
 import { successResponse } from '../../utils/response';
+import { logger } from '../../infrastructure/logger';
 import type { GetWaitlistUsersInput, SendEmailInput, SendBulkEmailInput } from './admin.schema';
 
 /**
@@ -229,6 +231,68 @@ export async function getDashboardStats(
   try {
     const stats = await adminService.getDashboardStats();
     res.json(successResponse(stats));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * /api/v1/admin/launch:
+ *   post:
+ *     summary: Trigger platform launch (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Platform launched successfully
+ *       409:
+ *         description: Platform already launched
+ */
+export async function launchPlatform(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const adminUserId = req.user!.userId;
+
+    logger.info({ adminUserId }, 'Admin triggered platform launch');
+
+    const result = await launchService.triggerLaunch(adminUserId);
+
+    res.json(
+      successResponse({
+        message: 'Platform launched successfully! Launch emails are being sent.',
+        ...result,
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * /api/v1/admin/launch/status:
+ *   get:
+ *     summary: Get platform launch status (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Launch status
+ */
+export async function getLaunchStatus(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const status = await launchService.getLaunchStatus();
+    res.json(successResponse(status));
   } catch (error) {
     next(error);
   }

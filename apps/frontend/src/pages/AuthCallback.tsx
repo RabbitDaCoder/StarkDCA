@@ -1,5 +1,6 @@
 // ─── Auth Callback Page ──────────────────────────────────────────────
 // Handles OAuth callback redirects and token storage.
+// Redirects to /waitlist (not dashboard) since dashboard is locked pre-launch.
 
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -25,7 +26,11 @@ export default function AuthCallback() {
 
       if (token && userId) {
         try {
-          // Get full user profile
+          // Temporarily set token so API calls work
+          const tempUser = { id: userId, name: null, email: null, role: 'USER' };
+          setAuth(tempUser, token);
+
+          // Get full user profile (includes launchAccessGranted)
           const profile = await authApi.getProfile();
 
           setAuth(
@@ -34,11 +39,21 @@ export default function AuthCallback() {
               name: profile.name,
               email: profile.email,
               role: profile.role,
+              emailVerified: profile.emailVerified,
+              launchAccessGranted: profile.launchAccessGranted,
+              waitlistPosition: profile.waitlistPosition,
             },
             token,
           );
 
-          navigate('/dashboard');
+          // Redirect based on launch access
+          if (profile.role === 'ADMIN') {
+            navigate('/admin');
+          } else if (profile.launchAccessGranted) {
+            navigate('/dashboard');
+          } else {
+            navigate('/waitlist');
+          }
         } catch {
           navigate('/login?error=oauth_failed');
         }

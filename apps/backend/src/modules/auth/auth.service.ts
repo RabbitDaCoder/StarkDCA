@@ -8,9 +8,24 @@ import { prisma } from '../../infrastructure/db';
 import { config } from '../../config';
 import { logger } from '../../infrastructure/logger';
 import { emailService } from '../../infrastructure/email';
-import { UnauthorizedError, BadRequestError, ConflictError } from '../../utils/errors';
+import { redis } from '../../infrastructure/redis';
+import { waitlistService } from '../waitlist/waitlist.service';
+import {
+  UnauthorizedError,
+  BadRequestError,
+  ConflictError,
+  TooManyRequestsError,
+} from '../../utils/errors';
 import type { JwtPayload } from '../../middleware/authenticate';
 import type { SignupInput, LoginInput } from './auth.schema';
+
+// Redis keys for OTP
+const OTP_PREFIX = 'otp:';
+const OTP_RATE_PREFIX = 'otp:rate:';
+const OTP_TTL = 600; // 10 minutes
+const OTP_RATE_LIMIT_TTL = 60; // 1 minute between resends
+const OTP_MAX_ATTEMPTS = 5; // Max verification attempts
+const OTP_ATTEMPTS_PREFIX = 'otp:attempts:';
 
 interface TokenPair {
   accessToken: string;
@@ -35,6 +50,7 @@ class AuthService {
   /**
    * Register a new user with email and password.
    * Security: Password is hashed with bcrypt before storage.
+   * New flow: Does NOT grant dashboard access. Sends OTP for email verification.
    */
   async signup(input: SignupInput): Promise<AuthResult> {
     const { name, email, password } = input;
@@ -51,25 +67,25 @@ class AuthService {
     // Hash password with bcrypt (cost factor from config)
     const passwordHash = await bcrypt.hash(password, config.bcrypt.rounds);
 
-    // Create user
+    // Create user (emailVerified = false, launchAccessGranted = false)
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
         role: 'USER',
+        emailVerified: false,
+        launchAccessGranted: false,
       },
     });
 
-    // Generate tokens
+    // Generate tokens (user can authenticate but dashboard is locked)
     const tokens = await this.generateTokenPairForUser(user.id, user.email);
 
-    // Send welcome email (async, don't block response)
-    emailService.sendSignupWelcome(email, name).catch((err) => {
-      logger.error({ error: err, email }, 'Failed to send signup welcome email');
-    });
+    // Generate and send OTP for email verification
+    await this.generateAndSendOtp(user.id, email, name);
 
-    logger.info({ userId: user.id, email }, 'New user registered via email/password');
+    logger.info({ userId: user.id, email }, 'New user registered — OTP sent for verification');
 
     return { ...tokens, userId: user.id, name: user.name, email: user.email, role: user.role };
   }
@@ -181,6 +197,7 @@ class AuthService {
           name: googleUser.name,
           email: googleUser.email,
           emailVerified: true, // Google emails are verified
+          launchAccessGranted: false, // Still locked until launch
           role: 'USER',
           oauthAccounts: {
             create: {
@@ -195,10 +212,16 @@ class AuthService {
         include: { oauthAccounts: true },
       });
 
-      // Send welcome email
-      emailService.sendSignupWelcome(googleUser.email, googleUser.name).catch((err) => {
-        logger.error({ error: err, email: googleUser.email }, 'Failed to send OAuth welcome email');
-      });
+      // Add to waitlist and send waitlist email (Google users are auto-verified)
+      const waitlistInfo = await waitlistService.addUserToWaitlist(user.id);
+      emailService
+        .sendWaitlistConfirmation(googleUser.email, googleUser.name, waitlistInfo.position)
+        .catch((err) => {
+          logger.error(
+            { error: err, email: googleUser.email },
+            'Failed to send waitlist confirmation email',
+          );
+        });
 
       logger.info(
         { userId: user.id, email: googleUser.email },
@@ -239,6 +262,169 @@ class AuthService {
     const tokens = await this.generateTokenPairForUser(user.id, user.email);
 
     return { ...tokens, userId: user.id, name: user.name, email: user.email, role: user.role };
+  }
+
+  // ─── OTP Verification ─────────────────────────────────────────────
+
+  /**
+   * Verify OTP code for email verification.
+   * After successful verification:
+   * - Mark email as verified
+   * - Add user to waitlist
+   * - Send "You're on the Waitlist" email
+   * - Return waitlist info (position, total users)
+   */
+  async verifyOtp(
+    userId: string,
+    otpCode: string,
+  ): Promise<{
+    verified: boolean;
+    waitlistPosition: number;
+    totalUsers: number;
+  }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, emailVerified: true },
+    });
+
+    if (!user || !user.email) {
+      throw new BadRequestError('User not found');
+    }
+
+    if (user.emailVerified) {
+      // Already verified — return waitlist info
+      const info = await waitlistService.getUserWaitlistInfo(userId);
+      return { verified: true, waitlistPosition: info.position, totalUsers: info.totalUsers };
+    }
+
+    // Check attempt count (brute force protection)
+    const attemptsKey = `${OTP_ATTEMPTS_PREFIX}${userId}`;
+    const attempts = await redis.incr(attemptsKey);
+    if (attempts === 1) {
+      await redis.expire(attemptsKey, OTP_TTL);
+    }
+    if (attempts > OTP_MAX_ATTEMPTS) {
+      throw new TooManyRequestsError(
+        'Too many verification attempts. Please request a new code.',
+        'OTP_MAX_ATTEMPTS',
+      );
+    }
+
+    // Retrieve stored OTP
+    const storedOtp = await redis.get(`${OTP_PREFIX}${userId}`);
+    if (!storedOtp) {
+      throw new BadRequestError('Verification code expired. Please request a new one.');
+    }
+
+    // Constant-time comparison
+    const otpBuffer = Buffer.from(otpCode);
+    const storedBuffer = Buffer.from(storedOtp);
+    if (
+      otpBuffer.length !== storedBuffer.length ||
+      !crypto.timingSafeEqual(otpBuffer, storedBuffer)
+    ) {
+      throw new BadRequestError('Invalid verification code');
+    }
+
+    // OTP valid — mark email as verified
+    await prisma.user.update({
+      where: { id: userId },
+      data: { emailVerified: true },
+    });
+
+    // Clean up OTP keys
+    await redis.del(`${OTP_PREFIX}${userId}`);
+    await redis.del(attemptsKey);
+
+    // Add user to waitlist
+    const waitlistInfo = await waitlistService.addUserToWaitlist(userId);
+
+    // Send "You're on the Waitlist" email
+    emailService
+      .sendWaitlistConfirmation(user.email, user.name || 'there', waitlistInfo.position)
+      .catch((err) => {
+        logger.error(
+          { error: err, email: user.email },
+          'Failed to send waitlist confirmation email',
+        );
+      });
+
+    logger.info(
+      { userId, email: user.email, position: waitlistInfo.position },
+      'Email verified — user added to waitlist',
+    );
+
+    return {
+      verified: true,
+      waitlistPosition: waitlistInfo.position,
+      totalUsers: waitlistInfo.totalUsers,
+    };
+  }
+
+  /**
+   * Resend OTP. Rate limited to 1 per minute.
+   */
+  async resendOtp(userId: string): Promise<{ sent: boolean }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, emailVerified: true },
+    });
+
+    if (!user || !user.email) {
+      throw new BadRequestError('User not found');
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestError('Email is already verified');
+    }
+
+    // Rate limit check
+    const rateKey = `${OTP_RATE_PREFIX}${userId}`;
+    const rateLimited = await redis.get(rateKey);
+    if (rateLimited) {
+      throw new TooManyRequestsError(
+        'Please wait before requesting another code',
+        'OTP_RATE_LIMITED',
+      );
+    }
+
+    await this.generateAndSendOtp(userId, user.email, user.name || 'there');
+
+    return { sent: true };
+  }
+
+  /**
+   * Generate a 6-digit OTP, store in Redis, and send via email.
+   */
+  private async generateAndSendOtp(
+    userId: string,
+    email: string,
+    name: string | null,
+  ): Promise<void> {
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    // Store in Redis with TTL
+    await redis.set(`${OTP_PREFIX}${userId}`, otp, 'EX', OTP_TTL);
+
+    // Set rate limit for resend
+    await redis.set(`${OTP_RATE_PREFIX}${userId}`, '1', 'EX', OTP_RATE_LIMIT_TTL);
+
+    // Reset attempt counter
+    await redis.del(`${OTP_ATTEMPTS_PREFIX}${userId}`);
+
+    // Send OTP email
+    const firstName = name?.split(' ')[0] || 'there';
+    emailService.sendOtpEmail(email, firstName, otp).catch((err) => {
+      logger.error({ error: err, email }, 'Failed to send OTP email');
+    });
+
+    // In development, log OTP to console for easy testing
+    if (!config.isProduction) {
+      logger.info({ userId, email, otp }, '🔑 [DEV] OTP code for testing');
+    } else {
+      logger.info({ userId, email }, 'OTP generated and sent');
+    }
   }
 
   /**
@@ -339,6 +525,8 @@ class AuthService {
         starknetAddress: true,
         role: true,
         emailVerified: true,
+        launchAccessGranted: true,
+        waitlistPosition: true,
         createdAt: true,
       },
     });

@@ -44,16 +44,19 @@ enum OAuthProvider {
 // ─── Models ──────────────────────────────────────────────────────────
 
 model User {
-  id              String   @id @default(uuid())
-  starknetAddress String?  @unique @map("starknet_address")
-  name            String?
-  email           String?  @unique
-  passwordHash    String?  @map("password_hash")
-  role            UserRole @default(USER)
-  emailVerified   Boolean  @default(false) @map("email_verified")
-  nonce           Int      @default(0)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id                   String   @id @default(uuid())
+  starknetAddress      String?  @unique @map("starknet_address")
+  name                 String?
+  email                String?  @unique
+  passwordHash         String?  @map("password_hash")
+  role                 UserRole @default(USER)
+  emailVerified        Boolean  @default(false) @map("email_verified")
+  launchAccessGranted  Boolean  @default(false) @map("launch_access_granted")
+  waitlistPosition     Int?     @map("waitlist_position")
+  launchEmailSent      Boolean  @default(false) @map("launch_email_sent")
+  nonce                Int      @default(0)
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
   plans         DCAPlan[]
   refreshTokens RefreshToken[]
@@ -61,6 +64,7 @@ model User {
 
   @@index([starknetAddress])
   @@index([email])
+  @@index([launchAccessGranted])
   @@map("users")
 }
 

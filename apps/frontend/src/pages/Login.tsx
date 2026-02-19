@@ -43,7 +43,20 @@ export default function Login() {
 
     try {
       await login(formData.email, formData.password);
-      navigate('/dashboard');
+      // Fetch full profile to determine redirect
+      const { fetchProfile } = useAuthStore.getState();
+      await fetchProfile();
+      const user = useAuthStore.getState().user;
+
+      if (user?.role === 'ADMIN') {
+        navigate('/admin');
+      } else if (!user?.emailVerified) {
+        navigate('/verify-email');
+      } else if (!user?.launchAccessGranted) {
+        navigate('/waitlist');
+      } else {
+        navigate('/dashboard');
+      }
     } catch {
       // Error handled by store
     }

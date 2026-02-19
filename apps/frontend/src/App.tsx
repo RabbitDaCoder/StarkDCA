@@ -7,6 +7,7 @@ import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import AuthCallback from '@/pages/AuthCallback';
 import Waitlist from '@/pages/Waitlist';
+import VerifyEmail from '@/pages/VerifyEmail';
 import Admin from '@/pages/Admin';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -20,6 +21,16 @@ export default function App() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/waitlist" element={<Waitlist />} />
+
+      {/* Authenticated but pre-launch routes */}
+      <Route
+        path="/verify-email"
+        element={
+          <ProtectedRoute skipLaunchCheck>
+            <VerifyEmail />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected dashboard routes */}
       <Route

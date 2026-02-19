@@ -108,3 +108,28 @@ export async function getWaitlistStats(
     next(error);
   }
 }
+
+/**
+ * @swagger
+ * /api/v1/waitlist/me:
+ *   get:
+ *     summary: Get authenticated user's waitlist position
+ *     tags: [Waitlist]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's waitlist info
+ */
+export async function getUserWaitlistInfo(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const info = await waitlistService.getUserWaitlistInfo(req.user!.userId);
+    res.json(successResponse(info));
+  } catch (error) {
+    next(error);
+  }
+}

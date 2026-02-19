@@ -1,0 +1,740 @@
+{
+	"info": {
+		"_postman_id": "starkdca-api-2026",
+		"name": "StarkDCA API",
+		"description": "StarkDCA — Bitcoin DCA Platform on Starknet\n\nBase URL: http://localhost:4000/api/v1\n\n## Authentication\nMost endpoints require a Bearer token. After signup/login, the `accessToken` is returned in the response. Use it in the Authorization header.\n\n## Flow\n1. **Signup** → returns accessToken + sends OTP email\n2. **Verify OTP** → verifies email, adds user to waitlist\n3. **Waitlist** → user waits for admin to launch platform\n4. **Admin Launch** → grants dashboard access to all verified users\n5. **DCA Plans** → create/manage DCA plans (requires launch access)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:4000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "planId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "System",
+			"description": "Health and status endpoints",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Check if the server is running.\n\nNo authentication required.\n\n**Response:**\n- `status`: \"ok\"\n- `timestamp`: ISO date string\n- `uptime`: seconds since server started"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"description": "Authentication endpoints: signup, login, OAuth, wallet, OTP verification, token refresh",
+			"item": [
+				{
+					"name": "Signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data.accessToken) {",
+									"    pm.collectionVariables.set('accessToken', res.data.accessToken);",
+									"    console.log('Token saved. Check backend console for OTP code (dev mode).');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "signup"]
+						},
+						"description": "Register a new user with email and password.\n\nSends an OTP verification email. In dev mode, the OTP is logged to the backend console.\n\n**Password requirements:**\n- Min 8 characters\n- At least 1 uppercase letter\n- At least 1 lowercase letter\n- At least 1 number\n- At least 1 special character (@$!%*?&)\n\n**Response:** accessToken + user object\n\n**Auto-saves** `accessToken` to collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data.accessToken) {",
+									"    pm.collectionVariables.set('accessToken', res.data.accessToken);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Authenticate with email and password.\n\n**Response:** accessToken + user object (id, name, email, role)\n\n**Auto-saves** `accessToken` to collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Google OAuth (redirect)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/google",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "google"]
+						},
+						"description": "Initiates Google OAuth flow. Redirects to Google's consent screen.\n\nOpen this URL in a browser — it won't work in Postman directly."
+					},
+					"response": []
+				},
+				{
+					"name": "Google OAuth Callback",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/google/callback?code=AUTHORIZATION_CODE_FROM_GOOGLE",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "google", "callback"],
+							"query": [
+								{
+									"key": "code",
+									"value": "AUTHORIZATION_CODE_FROM_GOOGLE",
+									"description": "Google authorization code"
+								}
+							]
+						},
+						"description": "Google OAuth callback handler. This is called automatically by Google after user consent.\n\nRedirects to frontend with `?token=...&userId=...`\n\n**Note:** This endpoint is handled by the server — you don't call it manually."
+					},
+					"response": []
+				},
+				{
+					"name": "Connect Wallet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data.accessToken) {",
+									"    pm.collectionVariables.set('accessToken', res.data.accessToken);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"starknetAddress\": \"0x04a1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/connect",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "connect"]
+						},
+						"description": "Authenticate via Starknet wallet address. Creates user on first connect.\n\n**Body:**\n- `starknetAddress` (required): Hex Starknet address starting with `0x`\n- `signature` (optional): Wallet signature\n- `message` (optional): Signed message\n\n**Auto-saves** `accessToken` to collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "verify-otp"]
+						},
+						"description": "Verify the 6-digit OTP sent to the user's email after signup.\n\n**Requires:** Bearer token (from signup/login)\n\nIn dev mode, the OTP is logged to the backend console as:\n```\n🔑 [DEV] OTP code for testing: { otp: \"123456\" }\n```\n\n**On success:**\n- Email marked as verified\n- User added to waitlist with position\n- Waitlist confirmation email sent\n\n**Response:**\n- `verified`: true\n- `waitlistPosition`: number\n- `totalUsers`: number\n- `redirectTo`: \"/waitlist\"\n\n**Max 5 attempts** per OTP (then request a new one)."
+					},
+					"response": []
+				},
+				{
+					"name": "Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/resend-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "resend-otp"]
+						},
+						"description": "Resend OTP verification code to the user's email.\n\n**Requires:** Bearer token\n\n**Rate limited:** 1 request per 60 seconds.\n\n**Response:** `{ sent: true, message: \"Verification code sent\" }`"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data.accessToken) {",
+									"    pm.collectionVariables.set('accessToken', res.data.accessToken);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"YOUR_REFRESH_TOKEN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh"]
+						},
+						"description": "Get a new access token using a refresh token.\n\nThe refresh token can be sent either:\n- In the request body as `refreshToken`\n- In the `refresh_token` HTTP-only cookie (set automatically by login/signup)\n\n**Response:** New `accessToken`\n\n**Auto-saves** `accessToken` to collection variables.\n\n**Note:** The old refresh token is revoked (rotation). Reuse of a revoked token revokes ALL tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"YOUR_REFRESH_TOKEN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Revoke the current refresh token and clear the cookie.\n\nSend refresh token in body or it will be read from the `refresh_token` cookie."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile (me)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "me"]
+						},
+						"description": "Get the current authenticated user's profile.\n\n**Requires:** Bearer token\n\n**Response:**\n- `id`, `name`, `email`, `starknetAddress`\n- `role`: \"USER\" or \"ADMIN\"\n- `emailVerified`: boolean\n- `launchAccessGranted`: boolean\n- `waitlistPosition`: number | null\n- `createdAt`: ISO date"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Waitlist",
+			"description": "Public waitlist signup + stats, and authenticated user waitlist info",
+			"item": [
+				{
+					"name": "Join Waitlist (public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane@example.com\",\n    \"source\": \"landing\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/waitlist/join",
+							"host": ["{{baseUrl}}"],
+							"path": ["waitlist", "join"]
+						},
+						"description": "Join the public waitlist (for unauthenticated visitors).\n\n**No authentication required.**\n\n**Body:**\n- `name` (required): 2-100 characters\n- `email` (required): valid email, max 255 chars\n- `source` (optional): \"landing\", \"referral\", \"twitter\", etc.\n\n**Rate limited:** 3 signups per IP per hour.\n\n**Response:** `{ id, name, email, message }`\n\n**Note:** This is separate from the registered user waitlist. This is for public interest signups on the landing page."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Waitlist Stats (public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/waitlist/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["waitlist", "stats"]
+						},
+						"description": "Get public waitlist statistics for the landing page.\n\n**No authentication required.**\n\n**Response:**\n- `totalCount`: total waitlist signups\n- `recentSignups`: last 5 signups (first names only for privacy)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Waitlist Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/waitlist/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["waitlist", "me"]
+						},
+						"description": "Get the authenticated user's waitlist position and stats.\n\n**Requires:** Bearer token\n\n**Response:**\n- `position`: user's waitlist position number\n- `totalUsers`: total verified users on waitlist\n- `name`: user's name"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DCA Plans",
+			"description": "DCA plan management. All endpoints require authentication AND launch access (launchAccessGranted = true).",
+			"item": [
+				{
+					"name": "Create Plan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data.id) {",
+									"    pm.collectionVariables.set('planId', res.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}",
+								"description": "Unique key to prevent duplicate plan creation"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"depositTokenAddress\": \"0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8\",\n    \"targetTokenAddress\": \"0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac\",\n    \"amountPerExecution\": \"100000000\",\n    \"totalExecutions\": 12,\n    \"interval\": \"WEEKLY\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/plans",
+							"host": ["{{baseUrl}}"],
+							"path": ["plans"]
+						},
+						"description": "Create a new DCA plan.\n\n**Requires:** Bearer token + Launch access\n\n**Headers:**\n- `Idempotency-Key`: Unique UUID to prevent duplicate plan creation (auto-generated with `{{$guid}}`)\n\n**Body:**\n- `depositTokenAddress`: Starknet token address to DCA from (e.g., USDT)\n- `targetTokenAddress`: Starknet token address to buy (e.g., WBTC)\n- `amountPerExecution`: Amount in smallest unit (string, must be positive)\n- `totalExecutions`: 1-365\n- `interval`: \"DAILY\" | \"WEEKLY\" | \"BIWEEKLY\" | \"MONTHLY\"\n\n**Auto-saves** `planId` to collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "List My Plans",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/plans?limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["plans"],
+							"query": [
+								{
+									"key": "cursor",
+									"value": "",
+									"description": "Cursor for pagination (plan ID)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "1-100, default 20"
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE",
+									"description": "ACTIVE | PAUSED | COMPLETED | CANCELLED",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List the current user's DCA plans with cursor-based pagination.\n\n**Requires:** Bearer token + Launch access\n\n**Query params:**\n- `cursor` (optional): plan ID for pagination\n- `limit` (optional): 1-100, default 20\n- `status` (optional): filter by ACTIVE, PAUSED, COMPLETED, or CANCELLED"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Plan by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/plans/{{planId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["plans", "{{planId}}"]
+						},
+						"description": "Get a single DCA plan by ID.\n\n**Requires:** Bearer token + Launch access\n\n**Path params:**\n- `planId`: UUID of the plan\n\nUses `{{planId}}` variable (auto-saved from Create Plan)."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Plan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}",
+								"description": "Prevent duplicate cancellation"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/plans/{{planId}}/cancel",
+							"host": ["{{baseUrl}}"],
+							"path": ["plans", "{{planId}}", "cancel"]
+						},
+						"description": "Cancel an active DCA plan.\n\n**Requires:** Bearer token + Launch access\n\n**Path params:**\n- `planId`: UUID of the plan to cancel\n\n**Headers:**\n- `Idempotency-Key`: Unique UUID to prevent duplicate cancellation"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Execution History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/plans/{{planId}}/executions?limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["plans", "{{planId}}", "executions"],
+							"query": [
+								{
+									"key": "cursor",
+									"value": "",
+									"description": "Cursor for pagination",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "1-100, default 20"
+								}
+							]
+						},
+						"description": "Get execution history for a specific DCA plan.\n\n**Requires:** Bearer token + Launch access\n\n**Path params:**\n- `planId`: UUID of the plan\n\n**Query params:**\n- `cursor` (optional): execution ID for pagination\n- `limit` (optional): 1-100, default 20\n\n**Each execution contains:**\n- `executionNumber`, `amountIn`, `amountOut`\n- `priceAtExecution`, `txHash`, `status`\n- `errorMessage` (if failed), `executedAt`"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Price",
+			"description": "Price feed endpoints",
+			"item": [
+				{
+					"name": "Get BTC Price",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/price/btc",
+							"host": ["{{baseUrl}}"],
+							"path": ["price", "btc"]
+						},
+						"description": "Get the current BTC price in USD.\n\n**No authentication required.**\n\n**Response:**\n- `symbol`: \"BTC\"\n- `price`: number (e.g., 65000.50)\n- `timestamp`: Unix timestamp\n- `source`: price source (e.g., \"coingecko\")"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"description": "Admin-only endpoints. All require Bearer token from an ADMIN user.\n\nTo make a user admin, update the database:\n```sql\nUPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';\n```",
+			"item": [
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "stats"]
+						},
+						"description": "Get admin dashboard statistics.\n\n**Requires:** Bearer token (ADMIN role)\n\n**Response:** Various platform statistics (total users, waitlist count, plans, executions, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Waitlist Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/waitlist?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "waitlist"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (min 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (1-100)"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "createdAt | name | email"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"description": "asc | desc"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Search by name or email",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all public waitlist users with pagination, sorting, and search.\n\n**Requires:** Bearer token (ADMIN role)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Registered Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users"]
+						},
+						"description": "Get all registered users.\n\n**Requires:** Bearer token (ADMIN role)\n\n**Response:** Paginated list of registered users with their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Export Waitlist CSV",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/waitlist/export",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "waitlist", "export"]
+						},
+						"description": "Export the entire waitlist as a CSV file.\n\n**Requires:** Bearer token (ADMIN role)\n\n**Response:** CSV file download with columns: ID, Name, Email, Source, Signed Up At"
+					},
+					"response": []
+				},
+				{
+					"name": "Send Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recipients\": [\"user1@example.com\", \"user2@example.com\"],\n    \"subject\": \"Important Announcement\",\n    \"template\": \"announcement\",\n    \"variables\": {\n        \"title\": \"We're launching soon!\",\n        \"body\": \"Get ready for an amazing DCA experience.\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/email/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "email", "send"]
+						},
+						"description": "Send email to specific recipients.\n\n**Requires:** Bearer token (ADMIN role)\n\n**Body:**\n- `recipients` (required): Array of email addresses (1-1000)\n- `subject` (required): Email subject (max 200 chars)\n- `template`: \"announcement\" or \"launch\" (default: \"announcement\")\n- `variables`: Key-value pairs for template variables"
+					},
+					"response": []
+				},
+				{
+					"name": "Send Bulk Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"filter\": \"all\",\n    \"subject\": \"Exciting News from StarkDCA\",\n    \"template\": \"announcement\",\n    \"variables\": {\n        \"title\": \"Big Update\",\n        \"body\": \"We have exciting news to share!\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/email/bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "email", "bulk"]
+						},
+						"description": "Send bulk email to waitlist users.\n\n**Requires:** Bearer token (ADMIN role)\n\n**Body:**\n- `filter`: \"all\" | \"recent\" | \"custom\" (default: \"all\")\n- `recentDays` (optional): Number of days for \"recent\" filter (1-365)\n- `subject` (required): Email subject (max 200 chars)\n- `template`: \"announcement\" or \"launch\"\n- `variables`: Key-value pairs for template variables"
+					},
+					"response": []
+				},
+				{
+					"name": "Launch Platform",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/launch",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "launch"]
+						},
+						"description": "Trigger platform launch. This is a ONE-TIME operation.\n\n**Requires:** Bearer token (ADMIN role)\n\n**What happens:**\n1. All verified users get `launchAccessGranted = true`\n2. Launch emails are sent in background batches\n3. Dashboard becomes accessible to all verified users\n\n**Response:**\n- `usersUpdated`: number of users granted access\n- `emailsQueued`: number of launch emails queued\n- `launchedAt`: ISO timestamp\n- `launchedBy`: admin user ID\n\n**Idempotent:** Returns 409 if already launched."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Launch Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/launch/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "launch", "status"]
+						},
+						"description": "Get the current platform launch status.\n\n**Requires:** Bearer token (ADMIN role)\n\n**Response:**\n- `launched`: boolean\n- `launchedAt`: ISO date or null\n- `launchedBy`: admin user ID or null\n- `emailProgress`: { total, sent, failed, inProgress }"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

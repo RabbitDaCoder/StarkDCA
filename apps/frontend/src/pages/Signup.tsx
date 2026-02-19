@@ -84,7 +84,7 @@ export default function Signup() {
 
     try {
       await signup(formData.name, formData.email, formData.password);
-      navigate('/dashboard');
+      navigate('/verify-email');
     } catch {
       // Error handled by store
     }

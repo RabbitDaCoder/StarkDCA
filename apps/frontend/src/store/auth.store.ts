@@ -10,6 +10,9 @@ interface User {
   name: string | null;
   email: string | null;
   role: string;
+  emailVerified?: boolean;
+  launchAccessGranted?: boolean;
+  waitlistPosition?: number | null;
 }
 
 interface AuthState {
@@ -24,8 +27,10 @@ interface AuthState {
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   setAuth: (user: User, accessToken: string) => void;
+  updateUser: (updates: Partial<User>) => void;
   clearError: () => void;
   refreshToken: () => Promise<void>;
+  fetchProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -96,6 +101,13 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
+      updateUser: (updates: Partial<User>) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({ user: { ...currentUser, ...updates } });
+        }
+      },
+
       clearError: () => {
         set({ error: null });
       },
@@ -107,6 +119,25 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           // Token refresh failed, logout
           get().logout();
+        }
+      },
+
+      fetchProfile: async () => {
+        try {
+          const profile = await authApi.getProfile();
+          set({
+            user: {
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              role: profile.role,
+              emailVerified: profile.emailVerified,
+              launchAccessGranted: profile.launchAccessGranted,
+              waitlistPosition: profile.waitlistPosition,
+            },
+          });
+        } catch {
+          // Ignore errors
         }
       },
     }),

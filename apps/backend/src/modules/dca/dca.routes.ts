@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { dcaController } from './dca.controller';
-import { validate, authenticate, idempotency } from '../../middleware';
+import { validate, authenticate, idempotency, requireLaunchAccess } from '../../middleware';
 import { apiRateLimit } from '../../middleware/rate-limit';
 import {
   createPlanSchema,
@@ -12,8 +12,9 @@ import {
 
 const router = Router();
 
-// All DCA routes require authentication
+// All DCA routes require authentication + launch access
 router.use(authenticate);
+router.use(requireLaunchAccess);
 router.use(apiRateLimit);
 
 /**

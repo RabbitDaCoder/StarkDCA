@@ -22,6 +22,7 @@ interface WaitlistUser {
 interface AdminStats {
   totalWaitlist: number;
   totalUsers: number;
+  verifiedUsers: number;
   waitlistToday: number;
   usersToday: number;
 }
@@ -30,6 +31,26 @@ interface EmailResult {
   success: number;
   failed: number;
   total: number;
+}
+
+interface LaunchResult {
+  message: string;
+  usersUpdated: number;
+  emailsQueued: number;
+  launchedAt: string;
+  launchedBy: string;
+}
+
+interface LaunchStatus {
+  launched: boolean;
+  launchedAt: string | null;
+  launchedBy: string | null;
+  emailProgress: {
+    total: number;
+    sent: number;
+    failed: number;
+    inProgress: boolean;
+  };
 }
 
 export const adminApi = {
@@ -74,6 +95,16 @@ export const adminApi = {
     variables?: Record<string, string>;
   }): Promise<EmailResult> {
     const response = await apiClient.post('/v1/admin/email/bulk', data);
+    return unwrap(response);
+  },
+
+  async launchPlatform(): Promise<LaunchResult> {
+    const response = await apiClient.post('/v1/admin/launch');
+    return unwrap(response);
+  },
+
+  async getLaunchStatus(): Promise<LaunchStatus> {
+    const response = await apiClient.get('/v1/admin/launch/status');
     return unwrap(response);
   },
 };

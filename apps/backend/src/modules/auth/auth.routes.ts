@@ -176,4 +176,53 @@ router.post('/logout', (req, res, next) => authController.logout(req, res, next)
  */
 router.get('/me', authenticate, (req, res, next) => authController.me(req, res, next));
 
+/**
+ * @swagger
+ * /api/v1/auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP code for email verification
+ *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [otp]
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Email verified, user added to waitlist
+ *       400:
+ *         description: Invalid OTP code
+ *       429:
+ *         description: Too many attempts
+ */
+router.post('/verify-otp', authenticate, authRateLimit, (req, res, next) =>
+  authController.verifyOtp(req, res, next),
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/resend-otp:
+ *   post:
+ *     summary: Resend OTP verification code
+ *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OTP resent
+ *       429:
+ *         description: Rate limited
+ */
+router.post('/resend-otp', authenticate, authRateLimit, (req, res, next) =>
+  authController.resendOtp(req, res, next),
+);
+
 export default router;

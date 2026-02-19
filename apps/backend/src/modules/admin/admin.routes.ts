@@ -11,6 +11,8 @@ import {
   sendEmail,
   sendBulkEmail,
   getDashboardStats,
+  launchPlatform,
+  getLaunchStatus,
 } from './admin.controller';
 import { getWaitlistUsersSchema, sendEmailSchema, sendBulkEmailSchema } from './admin.schema';
 
@@ -33,5 +35,9 @@ router.get('/users', getUsers);
 // Email management
 router.post('/email/send', validate(sendEmailSchema), sendEmail);
 router.post('/email/bulk', validate(sendBulkEmailSchema), sendBulkEmail);
+
+// Launch management
+router.post('/launch', launchPlatform);
+router.get('/launch/status', getLaunchStatus);
 
 export default router;
