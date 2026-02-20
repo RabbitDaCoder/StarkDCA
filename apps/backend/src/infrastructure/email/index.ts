@@ -227,7 +227,7 @@ class EmailService {
     <p>We'll notify you as soon as we launch. In the meantime, follow us on Twitter for updates!</p>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://twitter.com/StarkDCA" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Follow @StarkDCA</a>
+      <a href="https://x.com/DcaStark23076" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Follow @DcaStark23076</a>
     </div>
     
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
@@ -371,7 +371,7 @@ class EmailService {
     <p>In the meantime, follow us on Twitter for the latest updates!</p>
 
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://twitter.com/StarkDCA" style="background: #1F3878; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; font-family: 'Poppins', sans-serif;">Follow @StarkDCA</a>
+      <a href="https://x.com/DcaStark23076" style="background: #1F3878; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; font-family: 'Poppins', sans-serif;">Follow @DcaStark23076</a>
     </div>
 
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">

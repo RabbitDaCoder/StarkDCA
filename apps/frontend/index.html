@@ -2,13 +2,51 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StarkDCA — BTC Dollar Cost Averaging on Starknet</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/starkDCA.png" />
+    <link rel="apple-touch-icon" href="/starkDCA.png" />
+
+    <!-- Primary SEO -->
+    <title>StarkDCA — Automated Bitcoin DCA on Starknet</title>
     <meta
       name="description"
-      content="Automate your BTC accumulation strategy on Starknet. Non-custodial, on-chain Dollar-Cost Averaging."
+      content="Automate your Bitcoin Dollar-Cost Averaging on Starknet. Non-custodial, on-chain, low fees. Set your strategy and let smart contracts do the rest."
     />
+    <meta
+      name="keywords"
+      content="StarkDCA, Bitcoin DCA, Dollar Cost Averaging, Starknet, DeFi, crypto investing, automated trading, non-custodial, Web3, Cairo smart contracts"
+    />
+    <meta name="author" content="StarkDCA Team" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://starkdca.com" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://starkdca.com" />
+    <meta property="og:title" content="StarkDCA — Automated Bitcoin DCA on Starknet" />
+    <meta
+      property="og:description"
+      content="Set-and-forget Bitcoin accumulation powered by Starknet smart contracts. Non-custodial, transparent, and built for the long-term investor."
+    />
+    <meta property="og:image" content="https://starkdca.com/starkDCA.png" />
+    <meta property="og:site_name" content="StarkDCA" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@DcaStark23076" />
+    <meta name="twitter:title" content="StarkDCA — Automated Bitcoin DCA on Starknet" />
+    <meta
+      name="twitter:description"
+      content="Set-and-forget Bitcoin accumulation powered by Starknet smart contracts. Non-custodial, transparent, and built for the long-term investor."
+    />
+    <meta name="twitter:image" content="https://starkdca.com/starkDCA.png" />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#F97316" />
+    <meta name="msapplication-TileColor" content="#F97316" />
+
     <!-- Google Fonts: Poppins + Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,6 +56,16 @@
     />
   </head>
   <body>
+    <script>
+      // Prevent FOUC: apply dark mode class before first paint
+      (function () {
+        var t = localStorage.getItem('starkdca-theme');
+        var dark =
+          t === 'dark' ||
+          ((!t || t === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

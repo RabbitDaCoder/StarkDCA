@@ -13,6 +13,7 @@ const options: swaggerJsdoc.Options = {
       description: 'BTC Dollar Cost Averaging protocol on Starknet — REST API documentation',
       contact: {
         name: 'StarkDCA Team',
+        email: 'Starkdca@gmail.com',
       },
     },
     servers: [
