@@ -388,9 +388,9 @@ class AuthService {
       );
     }
 
-    await this.generateAndSendOtp(userId, user.email, user.name || 'there');
+    const sent = await this.generateAndSendOtp(userId, user.email, user.name || 'there');
 
-    return { sent: true };
+    return { sent };
   }
 
   /**
@@ -400,7 +400,7 @@ class AuthService {
     userId: string,
     email: string,
     name: string | null,
-  ): Promise<void> {
+  ): Promise<boolean> {
     // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
 
@@ -413,18 +413,26 @@ class AuthService {
     // Reset attempt counter
     await redis.del(`${OTP_ATTEMPTS_PREFIX}${userId}`);
 
-    // Send OTP email
+    // Send OTP email (await so we can report actual status)
     const firstName = name?.split(' ')[0] || 'there';
-    emailService.sendOtpEmail(email, firstName, otp).catch((err) => {
-      logger.error({ error: err, email }, 'Failed to send OTP email');
-    });
+    let sent = false;
+    try {
+      sent = await emailService.sendOtpEmail(email, firstName, otp);
+      if (!sent) {
+        logger.error({ userId, email }, 'OTP email send returned false — email was NOT delivered');
+      } else {
+        logger.info({ userId, email }, 'OTP email sent successfully');
+      }
+    } catch (err) {
+      logger.error({ error: err, email }, 'Failed to send OTP email — exception thrown');
+    }
 
     // In development, log OTP to console for easy testing
     if (!config.isProduction) {
       logger.info({ userId, email, otp }, '🔑 [DEV] OTP code for testing');
-    } else {
-      logger.info({ userId, email }, 'OTP generated and sent');
     }
+
+    return sent;
   }
 
   /**

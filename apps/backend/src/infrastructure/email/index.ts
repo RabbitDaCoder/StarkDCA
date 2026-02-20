@@ -106,7 +106,34 @@ class EmailService {
     } else {
       this.provider = new NodeMailerProvider();
     }
-    logger.info({ provider: config.email.provider }, 'Email service initialized');
+
+    // Diagnostic: log email config on startup (never log password)
+    const smtpUser = config.email.smtp.user;
+    const fromAddr = config.email.from.address;
+    logger.info(
+      {
+        provider: config.email.provider,
+        smtpHost: config.email.smtp.host,
+        smtpPort: config.email.smtp.port,
+        smtpUser: smtpUser ? `${smtpUser.slice(0, 4)}***` : '(not set)',
+        smtpPassSet: !!config.email.smtp.pass,
+        fromAddress: fromAddr,
+      },
+      'Email service initialized',
+    );
+
+    // Warn if Gmail SMTP and from address doesn't match SMTP user
+    if (
+      config.email.smtp.host === 'smtp.gmail.com' &&
+      smtpUser &&
+      fromAddr &&
+      !fromAddr.toLowerCase().includes(smtpUser.toLowerCase().split('@')[0])
+    ) {
+      logger.warn(
+        { smtpUser, fromAddress: fromAddr },
+        'Gmail SMTP: EMAIL_FROM_ADDRESS does not match SMTP_USER — Gmail may reject or override the sender address. Set EMAIL_FROM_ADDRESS to your Gmail address.',
+      );
+    }
   }
 
   async send(options: EmailOptions): Promise<boolean> {
@@ -115,6 +142,20 @@ class EmailService {
       logger.info({ ...options }, '[DEV] Email would be sent (no credentials configured)');
       return true;
     }
+
+    // Warn loudly if production has no credentials configured
+    if (config.isProduction) {
+      const hasSmtp = !!config.email.smtp.user && !!config.email.smtp.pass;
+      const hasSendgrid = !!config.email.sendgrid.apiKey;
+      if (!hasSmtp && !hasSendgrid) {
+        logger.error(
+          { to: options.to, provider: config.email.provider },
+          'EMAIL SEND FAILED: No email credentials configured in production! Set SMTP_USER/SMTP_PASS or SENDGRID_API_KEY.',
+        );
+        return false;
+      }
+    }
+
     return this.provider.send(options);
   }
 

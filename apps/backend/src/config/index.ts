@@ -56,7 +56,7 @@ const envSchema = z.object({
   SMTP_PASS: z.string().default(''),
   SENDGRID_API_KEY: z.string().default(''),
   EMAIL_FROM_NAME: z.string().default('StarkDCA'),
-  EMAIL_FROM_ADDRESS: z.string().email().default('noreply@starkdca.com'),
+  EMAIL_FROM_ADDRESS: z.string().email().default('starkdca@gmail.com'),
 
   // ─── Google OAuth ────────────────────────────────────────────────
   GOOGLE_CLIENT_ID: z.string().default(''),
