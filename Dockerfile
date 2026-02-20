@@ -55,6 +55,10 @@ COPY --from=builder /app/apps/backend/package.json ./apps/backend/
 COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder /app/apps/backend/node_modules ./apps/backend/node_modules
 
+# Copy the startup script
+COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Security: run as non-root
 RUN addgroup -g 1001 -S starkdca && \
     adduser -S starkdca -u 1001 -G starkdca && \
@@ -75,5 +79,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 # Use tini as PID 1 for proper signal forwarding
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Default: web server. Override with worker.js for worker service.
-CMD ["node", "apps/backend/dist/server.js"]
+# Default: web server. Migrations run automatically on startup.
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma && node apps/backend/dist/server.js"]

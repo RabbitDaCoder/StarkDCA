@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
 import { successResponse } from '../../utils/response';
 import { config } from '../../config';
+import { logger } from '../../infrastructure/logger';
 import type { SignupInput, LoginInput, GoogleCallbackInput } from './auth.schema';
 
 class AuthController {
@@ -95,6 +96,7 @@ class AuthController {
 
       res.redirect(redirectUrl.toString());
     } catch (error) {
+      logger.error({ err: error }, 'Google OAuth callback failed');
       // Redirect to frontend with error
       const errorUrl = new URL(`${config.frontend.url}/login`);
       errorUrl.searchParams.set('error', 'oauth_failed');

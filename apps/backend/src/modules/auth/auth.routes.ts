@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authController } from './auth.controller';
 import { validate, authenticate } from '../../middleware';
 import { authRateLimit } from '../../middleware/rate-limit';
+import { config } from '../../config';
 import {
   connectWalletSchema,
   refreshTokenSchema,
@@ -105,8 +106,19 @@ router.get('/google', (req, res) => authController.googleAuth(req, res));
  *       302:
  *         description: Redirect to frontend with token
  */
-router.get('/google/callback', validate(googleCallbackSchema), (req, res, next) =>
-  authController.googleCallback(req, res, next),
+router.get(
+  '/google/callback',
+  (req, res, next) => {
+    // Handle Google error responses (e.g., user denied consent) before validation
+    if (req.query.error) {
+      const errorUrl = new URL(`${config.frontend.url}/login`);
+      errorUrl.searchParams.set('error', 'oauth_failed');
+      return res.redirect(errorUrl.toString());
+    }
+    next();
+  },
+  validate(googleCallbackSchema),
+  (req, res, next) => authController.googleCallback(req, res, next),
 );
 
 /**
