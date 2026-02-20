@@ -55,10 +55,6 @@ COPY --from=builder /app/apps/backend/package.json ./apps/backend/
 COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder /app/apps/backend/node_modules ./apps/backend/node_modules
 
-# Copy the startup script
-COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
-
 # Security: run as non-root
 RUN addgroup -g 1001 -S starkdca && \
     adduser -S starkdca -u 1001 -G starkdca && \
