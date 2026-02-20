@@ -1,5 +1,5 @@
 // ─── Verify Email Page ───────────────────────────────────────────────
-// OTP verification screen after signup. Premium split-panel design.
+// OTP verification screen after signup. Premium split-panel design with dark mode.
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,8 @@ import { Loader2, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import starkDCALogo from '@/assets/starkDCA.png';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/landing/ThemeToggle';
 import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/services/api/auth';
 
@@ -143,14 +144,12 @@ export default function VerifyEmail() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background">
       {/* Left Panel - Brand */}
       <div className="hidden lg:flex lg:w-1/2 bg-brand-blue relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-brand-orange blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-80 h-80 rounded-full bg-brand-gold blur-3xl" />
-        </div>
+        <div className="absolute inset-0 bg-grid opacity-10" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-brand-orange/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-brand-gold/10 blur-[100px]" />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
@@ -172,7 +171,7 @@ export default function VerifyEmail() {
           </p>
 
           {/* Security note */}
-          <div className="flex items-start gap-4 bg-white/5 rounded-xl p-6">
+          <div className="flex items-start gap-4 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <ShieldCheck className="h-8 w-8 text-brand-gold flex-shrink-0 mt-1" />
             <div>
               <h3 className="font-semibold text-white mb-1">Secure Verification</h3>
@@ -186,7 +185,12 @@ export default function VerifyEmail() {
       </div>
 
       {/* Right Panel - OTP Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-brand-gray px-6 py-12">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 relative">
+        {/* Theme toggle */}
+        <div className="absolute top-5 right-5">
+          <ThemeToggle />
+        </div>
+
         <AnimatePresence mode="wait">
           {verifySuccess ? (
             <motion.div
@@ -196,15 +200,15 @@ export default function VerifyEmail() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              <Card className="w-full max-w-md shadow-xl border-0 text-center">
+              <div className="w-full max-w-md glass rounded-2xl text-center">
                 <CardContent className="py-16 px-8">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                    className="mx-auto w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mb-8"
+                    className="mx-auto w-24 h-24 rounded-full bg-green-500/10 flex items-center justify-center mb-8"
                   >
-                    <ShieldCheck className="h-12 w-12 text-green-600" />
+                    <ShieldCheck className="h-12 w-12 text-green-500" />
                   </motion.div>
 
                   <motion.div
@@ -212,7 +216,7 @@ export default function VerifyEmail() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <h2 className="text-3xl font-heading font-bold text-brand-blue mb-3">
+                    <h2 className="text-3xl font-heading font-bold text-foreground mb-3">
                       Email Verified!
                     </h2>
                     <p className="text-muted-foreground mb-8">
@@ -226,7 +230,7 @@ export default function VerifyEmail() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.6 }}
-                      className="bg-brand-gray rounded-2xl p-8 mb-6"
+                      className="bg-surface-elevated rounded-2xl p-8 mb-6 border border-border/50"
                     >
                       <p className="text-sm text-muted-foreground mb-2">Your Position</p>
                       <p className="text-5xl font-heading font-bold text-brand-orange">
@@ -244,7 +248,7 @@ export default function VerifyEmail() {
                     Redirecting to your waitlist page...
                   </motion.p>
                 </CardContent>
-              </Card>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -255,40 +259,40 @@ export default function VerifyEmail() {
               transition={{ duration: 0.3 }}
               className="w-full max-w-md"
             >
-              <Card className="shadow-xl border-0">
-                <CardHeader className="text-center pb-4">
+              <div className="glass rounded-2xl overflow-hidden">
+                <CardHeader className="text-center pb-4 pt-8 px-8">
                   {/* Mobile Logo */}
                   <div className="flex justify-center mb-4 lg:hidden">
                     <div className="flex items-center gap-2">
                       <img src={starkDCALogo} alt="StarkDCA" className="h-10 w-auto" />
-                      <span className="text-2xl font-heading font-bold text-brand-blue">
+                      <span className="text-2xl font-heading font-bold text-foreground">
                         StarkDCA
                       </span>
                     </div>
                   </div>
 
-                  <div className="mx-auto w-16 h-16 rounded-full bg-brand-blue/10 flex items-center justify-center mb-4">
-                    <Mail className="h-8 w-8 text-brand-blue" />
+                  <div className="mx-auto w-16 h-16 rounded-full bg-brand-orange/10 flex items-center justify-center mb-4">
+                    <Mail className="h-8 w-8 text-brand-orange" />
                   </div>
 
-                  <CardTitle className="text-2xl font-heading text-brand-blue">
+                  <CardTitle className="text-2xl font-heading text-foreground">
                     Check Your Email
                   </CardTitle>
                   <CardDescription className="text-muted-foreground">
                     We sent a 6-digit code to{' '}
-                    <span className="font-semibold text-brand-blue">
+                    <span className="font-semibold text-foreground">
                       {user?.email || 'your email'}
                     </span>
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 px-8 pb-8">
                   {/* Error Display */}
                   {error && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20 text-center"
+                      className="bg-destructive/10 text-destructive text-sm p-3 rounded-xl border border-destructive/20 text-center"
                     >
                       {error}
                     </motion.div>
@@ -310,7 +314,7 @@ export default function VerifyEmail() {
                         onKeyDown={(e) => handleKeyDown(index, e)}
                         onPaste={index === 0 ? handlePaste : undefined}
                         className={`w-12 h-14 text-center text-2xl font-heading font-bold rounded-xl border-2 transition-all duration-200 outline-none
-                          ${digit ? 'border-brand-orange bg-brand-orange/5 text-brand-blue' : 'border-gray-200 bg-white text-brand-blue'}
+                          ${digit ? 'border-brand-orange bg-brand-orange/5 text-foreground' : 'border-border/50 bg-surface-elevated text-foreground'}
                           focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20
                           ${isVerifying ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
@@ -323,7 +327,7 @@ export default function VerifyEmail() {
                   {/* Verify Button */}
                   <Button
                     onClick={() => handleVerify(otp.join(''))}
-                    className="w-full h-12 bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all"
+                    className="w-full h-12 bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold text-base rounded-xl shadow-lg shadow-brand-orange/20 hover:shadow-brand-orange/30 transition-all"
                     disabled={isVerifying || otp.some((d) => d === '')}
                   >
                     {isVerifying ? (
@@ -360,19 +364,19 @@ export default function VerifyEmail() {
                   </div>
 
                   {/* Back / Different Account */}
-                  <div className="pt-2 border-t">
+                  <div className="pt-2 border-t border-border/50">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleLogout}
-                      className="w-full text-muted-foreground hover:text-brand-blue"
+                      className="w-full text-muted-foreground hover:text-foreground"
                     >
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Use a different account
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

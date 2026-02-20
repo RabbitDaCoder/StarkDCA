@@ -70,8 +70,10 @@ export const authApi = {
   },
 
   getGoogleAuthUrl(): string {
-    // Use absolute backend URL for OAuth redirect (bypasses Vite proxy)
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-    return `${backendUrl}/api/v1/auth/google`;
+    // Reuse the same baseURL as the API client so we never double-prefix /api.
+    // In dev it resolves to '/api', in prod to the full absolute URL
+    // (e.g. 'https://…onrender.com/api').
+    const baseUrl = apiClient.defaults.baseURL || '/api';
+    return `${baseUrl}/v1/auth/google`;
   },
 };

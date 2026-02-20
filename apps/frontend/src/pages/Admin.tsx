@@ -244,14 +244,14 @@ export default function Admin() {
   };
 
   return (
-    <div className="flex h-screen bg-brand-gray">
+    <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden w-[260px] flex-shrink-0 flex-col bg-white border-r lg:flex">
+      <aside className="hidden w-[260px] flex-shrink-0 flex-col bg-card border-r border-border/50 lg:flex">
         {/* Logo */}
-        <div className="flex h-16 items-center gap-2 border-b px-6">
+        <div className="flex h-16 items-center gap-2 border-b border-border/50 px-6">
           <img src={starkDCALogo} alt="StarkDCA" className="h-9 w-auto" />
-          <span className="font-heading text-lg font-bold text-brand-blue">StarkDCA</span>
-          <Badge className="ml-auto bg-brand-blue text-white text-xs">Admin</Badge>
+          <span className="font-heading text-lg font-bold text-foreground">StarkDCA</span>
+          <Badge className="ml-auto bg-brand-orange text-white text-xs">Admin</Badge>
         </div>
 
         {/* Navigation */}
@@ -261,8 +261,8 @@ export default function Admin() {
               key={link.label}
               className={`w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all ${
                 link.active
-                  ? 'bg-brand-blue text-white'
-                  : 'text-muted-foreground hover:bg-brand-gray hover:text-brand-blue'
+                  ? 'bg-brand-orange text-white'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               <link.icon className="h-5 w-5" />
@@ -272,9 +272,9 @@ export default function Admin() {
         </nav>
 
         {/* User info */}
-        <div className="border-t p-4">
+        <div className="border-t border-border/50 p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-brand-blue flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-brand-orange flex items-center justify-center">
               <span className="text-white font-bold text-sm">
                 {user?.email?.[0]?.toUpperCase()}
               </span>
@@ -299,9 +299,9 @@ export default function Admin() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white border-b flex items-center justify-between px-6">
+        <header className="h-16 bg-card/80 backdrop-blur-xl border-b border-border/50 flex items-center justify-between px-6">
           <div>
-            <h1 className="font-heading text-xl font-bold text-brand-blue">Admin Dashboard</h1>
+            <h1 className="font-heading text-xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-xs text-muted-foreground">Manage platform operations</p>
           </div>
           <div className="flex items-center gap-3">
@@ -309,7 +309,7 @@ export default function Admin() {
               variant="outline"
               size="sm"
               onClick={handleExportCsv}
-              className="border-brand-blue/20 hover:border-brand-blue hover:bg-brand-blue/5"
+              className="border-border/50 hover:border-brand-orange hover:bg-surface-elevated"
             >
               <Download className="h-4 w-4 mr-2" />
               Export CSV
@@ -333,7 +333,7 @@ export default function Admin() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="font-heading text-brand-blue flex items-center gap-2">
+                  <DialogTitle className="font-heading text-foreground flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-brand-orange" />
                     Launch Platform
                   </DialogTitle>
@@ -346,7 +346,7 @@ export default function Admin() {
 
                 <div className="space-y-4 py-2">
                   <div className="bg-brand-orange/5 border border-brand-orange/20 rounded-lg p-4">
-                    <h4 className="font-semibold text-brand-blue text-sm mb-2">This will:</h4>
+                    <h4 className="font-semibold text-foreground text-sm mb-2">This will:</h4>
                     <ul className="space-y-2 text-sm text-muted-foreground">
                       <li className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
@@ -367,7 +367,7 @@ export default function Admin() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-brand-blue text-sm">
+                    <Label className="text-foreground text-sm">
                       Type <span className="font-bold font-mono">LAUNCH</span> to confirm
                     </Label>
                     <Input
@@ -376,7 +376,7 @@ export default function Admin() {
                         setLaunchConfirmText(e.target.value)
                       }
                       placeholder="Type LAUNCH"
-                      className="border-2 focus:border-brand-orange font-mono"
+                      className="border-border/50 focus:border-brand-orange font-mono bg-surface-elevated rounded-xl"
                     />
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export default function Admin() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="font-heading text-brand-blue">
+                  <DialogTitle className="font-heading text-foreground">
                     Send Bulk Email
                   </DialogTitle>
                   <DialogDescription>
@@ -569,7 +569,7 @@ export default function Admin() {
           <div className="max-w-[1400px] mx-auto space-y-8">
             {/* Stats Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              <Card className="border-0 shadow-lg">
+              <Card className="glass rounded-2xl border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -587,14 +587,14 @@ export default function Admin() {
                         <TrendingUp className="h-3 w-3" />+{stats?.waitlistToday || 0} today
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-brand-blue/10">
-                      <Users className="h-6 w-6 text-brand-blue" />
+                    <div className="p-3 rounded-xl bg-brand-orange/10">
+                      <Users className="h-6 w-6 text-brand-orange" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg">
+              <Card className="glass rounded-2xl border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -619,7 +619,7 @@ export default function Admin() {
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg">
+              <Card className="glass rounded-2xl border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -634,14 +634,14 @@ export default function Admin() {
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">Waitlist to signup</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-green-100">
-                      <TrendingUp className="h-6 w-6 text-green-600" />
+                    <div className="p-3 rounded-xl bg-green-500/10">
+                      <TrendingUp className="h-6 w-6 text-green-500" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg">
+              <Card className="glass rounded-2xl border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -657,14 +657,14 @@ export default function Admin() {
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">Email confirmed</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-green-100">
-                      <ShieldCheck className="h-6 w-6 text-green-600" />
+                    <div className="p-3 rounded-xl bg-green-500/10">
+                      <ShieldCheck className="h-6 w-6 text-green-500" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg">
+              <Card className="glass rounded-2xl border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -684,15 +684,15 @@ export default function Admin() {
 
             {/* Launch Status Banner */}
             {launchStatus?.launched && (
-              <Card className="border-0 shadow-lg border-l-4 border-l-green-500">
+              <Card className="glass rounded-2xl border-border/50 border-l-4 border-l-green-500">
                 <CardContent className="p-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-green-100">
-                        <Rocket className="h-6 w-6 text-green-600" />
+                      <div className="p-3 rounded-xl bg-green-500/10">
+                        <Rocket className="h-6 w-6 text-green-500" />
                       </div>
                       <div>
-                        <h3 className="font-heading font-bold text-brand-blue text-lg">
+                        <h3 className="font-heading font-bold text-foreground text-lg">
                           Platform Launched!
                         </h3>
                         <p className="text-sm text-muted-foreground">

@@ -66,9 +66,9 @@ export default function AuthCallback() {
   }, [searchParams, setAuth, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-brand-orange" />
         <p className="mt-4 text-muted-foreground">Completing authentication...</p>
       </div>
     </div>

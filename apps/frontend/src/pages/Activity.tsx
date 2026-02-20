@@ -39,18 +39,18 @@ export default function Activity() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center">
-            <History className="h-6 w-6 text-brand-blue" />
+          <div className="w-12 h-12 bg-brand-orange/10 rounded-xl flex items-center justify-center">
+            <History className="h-6 w-6 text-brand-orange" />
           </div>
           <div>
-            <h1 className="text-2xl font-heading font-semibold text-brand-blue">Activity</h1>
+            <h1 className="text-2xl font-heading font-semibold text-foreground">Activity</h1>
             <p className="text-sm text-muted-foreground">View your DCA execution history</p>
           </div>
         </div>
 
         <Button
           variant="outline"
-          className="border-brand-blue text-brand-blue hover:bg-brand-blue/5"
+          className="border-border/50 text-foreground hover:bg-surface-elevated"
         >
           <ArrowUpRight className="h-4 w-4 mr-2" />
           Export History
@@ -59,35 +59,35 @@ export default function Activity() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-green-50">
+        <Card className="glass rounded-2xl border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Successful Executions</p>
-                <p className="text-3xl font-heading font-bold text-green-600">0</p>
+                <p className="text-3xl font-heading font-bold text-green-500">0</p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-red-50">
+        <Card className="glass rounded-2xl border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Failed Executions</p>
-                <p className="text-3xl font-heading font-bold text-red-600">0</p>
+                <p className="text-3xl font-heading font-bold text-red-500">0</p>
               </div>
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <XCircle className="h-6 w-6 text-red-600" />
+              <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
+                <XCircle className="h-6 w-6 text-red-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-brand-gold/10">
+        <Card className="glass rounded-2xl border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -103,13 +103,13 @@ export default function Activity() {
       </div>
 
       {/* Execution History Card */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="border-b bg-gradient-to-r from-brand-blue to-brand-blue/90 rounded-t-lg">
+      <Card className="glass rounded-2xl border-border/50">
+        <CardHeader className="border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-              <Clock className="h-5 w-5 text-white" />
+            <div className="w-10 h-10 bg-brand-orange/10 rounded-lg flex items-center justify-center">
+              <Clock className="h-5 w-5 text-brand-orange" />
             </div>
-            <CardTitle className="text-white font-heading">Execution History</CardTitle>
+            <CardTitle className="text-foreground font-heading">Execution History</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -118,22 +118,22 @@ export default function Activity() {
               {recentActivity.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-4 bg-surface-elevated rounded-xl hover:bg-muted transition-colors border border-border/30"
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        activity.status === 'success' ? 'bg-green-100' : 'bg-red-100'
+                        activity.status === 'success' ? 'bg-green-500/10' : 'bg-red-500/10'
                       }`}
                     >
                       {activity.status === 'success' ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <CheckCircle className="h-5 w-5 text-green-500" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-red-600" />
+                        <XCircle className="h-5 w-5 text-red-500" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">DCA Execution</p>
+                      <p className="font-medium text-foreground">DCA Execution</p>
                       <p className="text-sm text-muted-foreground">{activity.txHash}</p>
                     </div>
                   </div>
@@ -146,17 +146,17 @@ export default function Activity() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-20 h-20 bg-brand-blue/10 rounded-full flex items-center justify-center mb-6">
-                <History className="h-10 w-10 text-brand-blue/40" />
+              <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mb-6">
+                <History className="h-10 w-10 text-brand-orange/40" />
               </div>
-              <h3 className="text-lg font-heading font-semibold text-brand-blue mb-2">
+              <h3 className="text-lg font-heading font-semibold text-foreground mb-2">
                 No executions yet
               </h3>
               <p className="text-sm text-muted-foreground max-w-sm">
                 Execution logs will appear here once your first DCA plan runs. Create a plan to get
                 started.
               </p>
-              <Button className="mt-6 bg-brand-orange hover:bg-brand-orange/90">
+              <Button className="mt-6 bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl shadow-lg shadow-brand-orange/20">
                 Create Your First Plan
               </Button>
             </div>

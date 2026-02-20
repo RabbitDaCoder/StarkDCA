@@ -13,7 +13,7 @@ export default function Dashboard() {
       {/* Title row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-brand-blue tracking-tight">
+          <h1 className="font-heading text-2xl font-bold text-foreground tracking-tight">
             Welcome Back
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -33,14 +33,14 @@ export default function Dashboard() {
       <SummaryCards summary={summary} />
 
       {/* Plans table */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="flex-row items-center justify-between space-y-0 pb-4 border-b">
+      <Card className="glass rounded-2xl border-border/50">
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-4 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-brand-blue/10">
-              <TrendingUp className="h-5 w-5 text-brand-blue" />
+            <div className="p-2 rounded-lg bg-brand-orange/10">
+              <TrendingUp className="h-5 w-5 text-brand-orange" />
             </div>
             <div>
-              <CardTitle className="font-heading text-lg text-brand-blue">Active Plans</CardTitle>
+              <CardTitle className="font-heading text-lg text-foreground">Active Plans</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">{plans.length} total plans</p>
             </div>
           </div>

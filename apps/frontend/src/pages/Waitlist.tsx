@@ -73,12 +73,13 @@ function CountdownTimer() {
     const calculateTimeLeft = () => {
       const now = new Date();
       const dayOfWeek = now.getDay();
-      const daysUntilFriday = dayOfWeek <= 5 ? 5 - dayOfWeek : 7 - dayOfWeek + 5;
-      const nextFriday = new Date(now);
-      nextFriday.setDate(now.getDate() + daysUntilFriday);
-      nextFriday.setHours(18, 0, 0, 0);
+      // Monday = 1
+      const daysUntilMonday = dayOfWeek <= 1 ? 1 - dayOfWeek : 7 - dayOfWeek + 1;
+      const nextMonday = new Date(now);
+      nextMonday.setDate(now.getDate() + daysUntilMonday);
+      nextMonday.setHours(18, 0, 0, 0);
 
-      const diff = nextFriday.getTime() - now.getTime();
+      const diff = nextMonday.getTime() - now.getTime();
       if (diff > 0) {
         setTimeLeft({
           days: Math.floor(diff / (1000 * 60 * 60 * 24)),

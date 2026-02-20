@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/landing/ThemeToggle';
 import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/services/api/auth';
 
@@ -67,12 +68,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background">
       {/* Left side - Brand panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-brand-blue relative overflow-hidden">
-        <div className="absolute inset-0 gradient-glow opacity-30" />
+        <div className="absolute inset-0 bg-grid opacity-10" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-brand-orange/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-brand-gold/10 blur-[100px]" />
         <div className="relative z-10 flex flex-col justify-between p-12">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2.5">
             <img src={starkDCALogo} alt="StarkDCA" className="h-10 w-auto" />
             <span className="font-heading text-2xl font-bold text-white">StarkDCA</span>
           </Link>
@@ -89,39 +92,48 @@ export default function Login() {
             </p>
           </div>
 
-          <p className="text-white/50 text-sm">© 2026 StarkDCA. Built on Starknet.</p>
+          <p className="text-white/50 text-sm">
+            &copy; {new Date().getFullYear()} StarkDCA. Built on Starknet.
+          </p>
         </div>
       </div>
 
       {/* Right side - Login form */}
-      <div className="flex-1 flex items-center justify-center bg-brand-gray px-6 py-12">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 relative">
+        {/* Theme toggle */}
+        <div className="absolute top-5 right-5">
+          <ThemeToggle />
+        </div>
+
         <div className="w-full max-w-md">
           {/* Mobile back link */}
           <Link
             to="/"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-brand-blue mb-8 lg:hidden"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-8 lg:hidden transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Home
           </Link>
 
-          <Card className="border-0 shadow-2xl">
-            <CardHeader className="text-center pb-2">
+          <div className="glass rounded-2xl overflow-hidden">
+            <CardHeader className="text-center pb-2 pt-8 px-8">
               <div className="flex justify-center mb-4 lg:hidden">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <img src={starkDCALogo} alt="StarkDCA" className="h-10 w-auto" />
-                  <span className="font-heading text-2xl font-bold text-brand-blue">StarkDCA</span>
+                  <span className="font-heading text-2xl font-bold text-foreground">StarkDCA</span>
                 </div>
               </div>
-              <CardTitle className="font-heading text-2xl text-brand-blue">Welcome back</CardTitle>
-              <CardDescription>Sign in to your account to continue</CardDescription>
+              <CardTitle className="font-heading text-2xl text-foreground">Welcome back</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Sign in to your account to continue
+              </CardDescription>
             </CardHeader>
 
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 px-8">
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Error Display */}
                 {(error || oauthError) && (
-                  <div className="bg-destructive/10 text-destructive text-sm p-4 rounded-lg flex items-center gap-3 border border-destructive/20">
+                  <div className="bg-destructive/10 text-destructive text-sm p-4 rounded-xl flex items-center gap-3 border border-destructive/20">
                     <AlertCircle className="h-5 w-5 flex-shrink-0" />
                     {error || 'Google authentication failed. Please try again.'}
                   </div>
@@ -129,11 +141,11 @@ export default function Login() {
 
                 {/* Email Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-brand-blue font-medium">
+                  <Label htmlFor="email" className="text-foreground font-medium text-sm">
                     Email
                   </Label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
                       name="email"
@@ -141,7 +153,7 @@ export default function Login() {
                       placeholder="john@example.com"
                       value={formData.email}
                       onChange={handleChange}
-                      className="pl-12 h-12 border-2 focus:border-brand-orange"
+                      className="pl-10 h-11 rounded-xl border-border/50 bg-surface-elevated focus:border-brand-orange focus:ring-brand-orange/20 transition-colors"
                       required
                       autoComplete="email"
                     />
@@ -151,7 +163,7 @@ export default function Login() {
                 {/* Password Field */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-brand-blue font-medium">
+                    <Label htmlFor="password" className="text-foreground font-medium text-sm">
                       Password
                     </Label>
                     <Link
@@ -162,7 +174,7 @@ export default function Login() {
                     </Link>
                   </div>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="password"
                       name="password"
@@ -170,16 +182,16 @@ export default function Login() {
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={handleChange}
-                      className="pl-12 pr-12 h-12 border-2 focus:border-brand-orange"
+                      className="pl-10 pr-10 h-11 rounded-xl border-border/50 bg-surface-elevated focus:border-brand-orange focus:ring-brand-orange/20 transition-colors"
                       required
                       autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand-blue transition-colors"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
@@ -187,7 +199,7 @@ export default function Login() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-brand-orange hover:bg-brand-orange/90 text-base font-semibold"
+                  className="w-full h-12 bg-brand-orange hover:bg-brand-orange/90 text-white text-base font-semibold rounded-xl shadow-lg shadow-brand-orange/20 transition-all hover:shadow-brand-orange/30"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -204,10 +216,10 @@ export default function Login() {
               {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-border/50" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-3 text-muted-foreground">Or continue with</span>
+                  <span className="bg-card px-3 text-muted-foreground">Or continue with</span>
                 </div>
               </div>
 
@@ -215,7 +227,7 @@ export default function Login() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-12 border-2 hover:border-brand-blue hover:bg-brand-blue/5"
+                className="w-full h-11 rounded-xl border-border/50 hover:border-brand-orange/30 hover:bg-surface-elevated transition-all"
                 onClick={handleGoogleLogin}
               >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -240,15 +252,15 @@ export default function Login() {
               </Button>
             </CardContent>
 
-            <CardFooter className="flex justify-center pb-8">
+            <div className="flex justify-center pb-8 px-8">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{' '}
                 <Link to="/signup" className="text-brand-orange font-medium hover:underline">
                   Sign up
                 </Link>
               </p>
-            </CardFooter>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
