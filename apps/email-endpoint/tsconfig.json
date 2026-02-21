@@ -19,6 +19,6 @@
       "@lib/*": ["lib/*"]
     }
   },
-  "include": ["api/**/*.ts", "lib/**/*.ts"],
+  "include": ["server.ts", "api/**/*.ts", "lib/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
