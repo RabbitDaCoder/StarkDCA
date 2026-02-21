@@ -27,6 +27,12 @@ const OTP_RATE_LIMIT_TTL = 60; // 1 minute between resends
 const OTP_MAX_ATTEMPTS = 5; // Max verification attempts
 const OTP_ATTEMPTS_PREFIX = 'otp:attempts:';
 
+// Redis keys for password reset
+const PW_RESET_PREFIX = 'pwreset:';
+const PW_RESET_RATE_PREFIX = 'pwreset:rate:';
+const PW_RESET_TTL = 3600; // 1 hour
+const PW_RESET_RATE_LIMIT_TTL = 60; // 1 minute between requests
+
 interface TokenPair {
   accessToken: string;
   refreshToken: string;
@@ -433,6 +439,108 @@ class AuthService {
     }
 
     return sent;
+  }
+
+  // ─── Password Reset ─────────────────────────────────────────────
+
+  /**
+   * Initiate password reset flow.
+   * Generates a secure token, stores in Redis, and sends email.
+   * For Google OAuth users without a password, this lets them set one.
+   * Always returns success to prevent email enumeration.
+   */
+  async forgotPassword(email: string): Promise<{ sent: boolean }> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, name: true },
+    });
+
+    // Always return success to prevent email enumeration
+    if (!user || !user.email) {
+      logger.info({ email }, 'Forgot password requested for non-existent email — no-op');
+      return { sent: true };
+    }
+
+    // Rate limit: 1 request per minute per user
+    const rateKey = `${PW_RESET_RATE_PREFIX}${user.id}`;
+    const rateLimited = await redis.get(rateKey);
+    if (rateLimited) {
+      throw new TooManyRequestsError(
+        'Please wait before requesting another reset link',
+        'RESET_RATE_LIMITED',
+      );
+    }
+
+    // Generate a secure random token
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Store token → userId mapping in Redis with 1-hour TTL
+    await redis.set(`${PW_RESET_PREFIX}${token}`, user.id, 'EX', PW_RESET_TTL);
+
+    // Set rate limit
+    await redis.set(rateKey, '1', 'EX', PW_RESET_RATE_LIMIT_TTL);
+
+    // Build reset URL
+    const resetUrl = `${config.frontend.url}/reset-password?token=${token}`;
+
+    // Send password reset email
+    const firstName = user.name?.split(' ')[0] || 'there';
+    emailService.sendPasswordResetEmail(user.email, firstName, resetUrl).catch((err) => {
+      logger.error({ error: err, email: user.email }, 'Failed to send password reset email');
+    });
+
+    // In dev, log the token
+    if (!config.isProduction) {
+      logger.info({ userId: user.id, email, token, resetUrl }, '🔑 [DEV] Password reset token');
+    }
+
+    logger.info({ userId: user.id, email }, 'Password reset email sent');
+
+    return { sent: true };
+  }
+
+  /**
+   * Reset password using a valid token.
+   * Works for both email/password users and Google OAuth users (setting password for first time).
+   */
+  async resetPassword(token: string, newPassword: string): Promise<{ reset: boolean }> {
+    // Look up the token in Redis
+    const userId = await redis.get(`${PW_RESET_PREFIX}${token}`);
+    if (!userId) {
+      throw new BadRequestError('Invalid or expired reset link. Please request a new one.');
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, passwordHash: true },
+    });
+
+    if (!user) {
+      throw new BadRequestError('Invalid or expired reset link. Please request a new one.');
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, config.bcrypt.rounds);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    // Invalidate the token (single use)
+    await redis.del(`${PW_RESET_PREFIX}${token}`);
+
+    // Revoke all refresh tokens for security (force re-login everywhere)
+    await this.revokeAllTokens(user.id);
+
+    logger.info(
+      { userId: user.id, email: user.email, hadPassword: !!user.passwordHash },
+      'Password reset successfully',
+    );
+
+    return { reset: true };
   }
 
   /**

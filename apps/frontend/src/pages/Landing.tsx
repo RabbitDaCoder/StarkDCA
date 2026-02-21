@@ -16,7 +16,7 @@ export default function Landing() {
   useTheme();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <LandingHeader />
       <main>
         <HeroSection />

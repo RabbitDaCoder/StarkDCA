@@ -12,11 +12,19 @@ export const sendOtpSchema = z.object({
 });
 
 export const sendEmailSchema = z.object({
-  type: z.enum(['waitlist-welcome', 'signup-welcome', 'waitlist-confirmation', 'launch', 'custom']),
+  type: z.enum([
+    'waitlist-welcome',
+    'signup-welcome',
+    'waitlist-confirmation',
+    'launch',
+    'custom',
+    'password-reset',
+  ]),
   to: z.string().email('Invalid email address'),
   name: z.string().min(1, 'Name is required').max(100),
   subject: z.string().max(200).optional(),
   position: z.number().int().positive().optional(),
+  resetUrl: z.string().url().optional(),
   templateName: z.string().max(50).optional(),
   variables: z.record(z.string()).optional(),
 });

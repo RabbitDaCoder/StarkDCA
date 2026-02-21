@@ -211,6 +211,56 @@ export function getWaitlistConfirmationTemplate(
   return { html, text };
 }
 
+export function getPasswordResetTemplate(
+  name: string,
+  resetUrl: string,
+): { html: string; text: string } {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Your Password</title>
+</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
+  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">Reset Your Password</h1>
+    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Secure your StarkDCA account</p>
+  </div>
+
+  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
+
+    <p style="color: #555;">We received a request to reset the password for your StarkDCA account. Click the button below to set a new password:</p>
+
+    <div style="text-align: center; margin: 35px 0;">
+      <a href="${resetUrl}" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 16px 40px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-size: 16px; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.4);">Reset Password</a>
+    </div>
+
+    <p style="color: #888; font-size: 14px; text-align: center;">This link expires in <strong>1 hour</strong>.</p>
+
+    <p style="color: #888; font-size: 13px; text-align: center; word-break: break-all;">
+      If the button doesn't work, copy and paste this link:<br>
+      <a href="${resetUrl}" style="color: #1F3878;">${resetUrl}</a>
+    </p>
+
+    <div style="background: #FFF8F0; border-left: 4px solid #FE6606; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+      <p style="margin: 0; font-size: 13px; color: #666;">If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+    </div>
+
+    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
+      – The StarkDCA Team
+    </p>
+  </div>
+</body>
+</html>`;
+
+  const text = `Hi ${name}, we received a request to reset your StarkDCA password. Visit this link to set a new password: ${resetUrl} — This link expires in 1 hour. If you didn't request this, ignore this email.`;
+
+  return { html, text };
+}
+
 export function getLaunchEmailTemplate(
   name: string,
   frontendUrl: string,

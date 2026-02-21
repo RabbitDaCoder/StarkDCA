@@ -76,4 +76,17 @@ export const authApi = {
     const baseUrl = apiClient.defaults.baseURL || '/api';
     return `${baseUrl}/v1/auth/google`;
   },
+
+  async forgotPassword(email: string): Promise<{ sent: boolean; message: string }> {
+    const response = await apiClient.post('/v1/auth/forgot-password', { email });
+    return unwrap(response);
+  },
+
+  async resetPassword(
+    token: string,
+    password: string,
+  ): Promise<{ reset: boolean; message: string }> {
+    const response = await apiClient.post('/v1/auth/reset-password', { token, password });
+    return unwrap(response);
+  },
 };

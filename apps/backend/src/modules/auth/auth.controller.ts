@@ -5,7 +5,13 @@ import { authService } from './auth.service';
 import { successResponse } from '../../utils/response';
 import { config } from '../../config';
 import { logger } from '../../infrastructure/logger';
-import type { SignupInput, LoginInput, GoogleCallbackInput } from './auth.schema';
+import type {
+  SignupInput,
+  LoginInput,
+  GoogleCallbackInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from './auth.schema';
 
 class AuthController {
   /**
@@ -214,6 +220,51 @@ class AuthController {
       const result = await authService.resendOtp(userId);
 
       res.json(successResponse({ message: 'Verification code sent', ...result }));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/forgot-password
+   * Request a password reset email.
+   */
+  async forgotPassword(
+    req: Request<unknown, unknown, ForgotPasswordInput>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const result = await authService.forgotPassword(req.body.email);
+      res.json(
+        successResponse({
+          message: 'If an account with that email exists, a reset link has been sent.',
+          ...result,
+        }),
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/reset-password
+   * Reset password using token from email.
+   */
+  async resetPassword(
+    req: Request<unknown, unknown, ResetPasswordInput>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { token, password } = req.body;
+      const result = await authService.resetPassword(token, password);
+      res.json(
+        successResponse({
+          message: 'Your password has been reset successfully. You can now sign in.',
+          ...result,
+        }),
+      );
     } catch (error) {
       next(error);
     }

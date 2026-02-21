@@ -9,6 +9,8 @@ import {
   signupSchema,
   loginSchema,
   googleCallbackSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from './auth.schema';
 
 const router = Router();
@@ -76,6 +78,62 @@ router.post('/signup', authRateLimit, validate(signupSchema), (req, res, next) =
  */
 router.post('/login', authRateLimit, validate(loginSchema), (req, res, next) =>
   authController.login(req, res, next),
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/forgot-password:
+ *   post:
+ *     summary: Request a password reset email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Reset link sent (always returns 200 to prevent email enumeration)
+ *       429:
+ *         description: Rate limited
+ */
+router.post('/forgot-password', authRateLimit, validate(forgotPasswordSchema), (req, res, next) =>
+  authController.forgotPassword(req, res, next),
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/reset-password:
+ *   post:
+ *     summary: Reset password using token from email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, password]
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post('/reset-password', authRateLimit, validate(resetPasswordSchema), (req, res, next) =>
+  authController.resetPassword(req, res, next),
 );
 
 /**

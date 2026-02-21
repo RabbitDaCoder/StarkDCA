@@ -57,6 +57,15 @@ const refreshTokenBodySchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
 });
 
+const forgotPasswordBodySchema = z.object({
+  email: emailSchema,
+});
+
+const resetPasswordBodySchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  password: passwordSchema,
+});
+
 // ─── Schemas for validate middleware ─────────────────────────────────
 
 export const signupSchema = {
@@ -79,8 +88,18 @@ export const refreshTokenSchema = {
   body: refreshTokenBodySchema,
 };
 
+export const forgotPasswordSchema = {
+  body: forgotPasswordBodySchema,
+};
+
+export const resetPasswordSchema = {
+  body: resetPasswordBodySchema,
+};
+
 export type SignupInput = z.infer<typeof signupBodySchema>;
 export type LoginInput = z.infer<typeof loginBodySchema>;
 export type GoogleCallbackInput = z.infer<typeof googleCallbackQuerySchema>;
 export type ConnectWalletInput = z.infer<typeof connectWalletBodySchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenBodySchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordBodySchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordBodySchema>;

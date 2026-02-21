@@ -91,6 +91,14 @@ class EmailService {
     );
   }
 
+  async sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<boolean> {
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'password-reset', to, name, resetUrl },
+      'sendPasswordResetEmail',
+    );
+  }
+
   // ─── Internal HTTP Helper ────────────────────────────────────────
 
   private async callEndpoint(

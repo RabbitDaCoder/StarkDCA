@@ -13,6 +13,7 @@ import {
   getWaitlistConfirmationTemplate,
   getLaunchEmailTemplate,
   getCustomTemplate,
+  getPasswordResetTemplate,
 } from '../lib/templates';
 import { handleCors, sendSuccess, sendError } from '../lib/response';
 import type { EmailOptions } from '../lib/types';
@@ -41,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const { type, to, name, subject, position, templateName, variables } = validation.data;
+  const { type, to, name, subject, position, resetUrl, templateName, variables } = validation.data;
 
   try {
     const config = getConfig();
@@ -92,6 +93,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         emailOptions = {
           to,
           subject: '🚀 StarkDCA is Live — Your Dashboard is Ready!',
+          html: tpl.html,
+          text: tpl.text,
+        };
+        break;
+      }
+
+      case 'password-reset': {
+        if (!resetUrl) {
+          sendError(res, 'resetUrl is required for password-reset', 422, 'VALIDATION_ERROR');
+          return;
+        }
+        const tpl = getPasswordResetTemplate(name, resetUrl);
+        emailOptions = {
+          to,
+          subject: 'Reset Your StarkDCA Password',
           html: tpl.html,
           text: tpl.text,
         };
