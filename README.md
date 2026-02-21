@@ -39,14 +39,21 @@ StarkDCA lets you **set-and-forget** a recurring Bitcoin buying strategy powered
 │  TailwindCSS        │     │  Prisma ORM  │     │  Oracle + USDT   │
 │  shadcn/ui + Radix  │     │  BullMQ      │     │  ERC-20 Tokens   │
 │  Zustand            │     │  Redis       │     │                  │
-└─────────────────────┘     └──────────────┘     └──────────────────┘
+└─────────────────────┘     └──────┬───────┘     └──────────────────┘
+                                   │ HTTP
+                            ┌──────▼───────┐
+                            │ Email Service│
+                            │ Vercel Funcs │
+                            │ SMTP/SendGrid│
+                            └──────────────┘
 ```
 
-| Layer         | Description                                                                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend**  | React SPA with TailwindCSS, shadcn/ui, glassmorphism design system, Starknet wallet integration, DCA plan management, and real-time price display. |
-| **Backend**   | Express API with Prisma (PostgreSQL), Redis caching, BullMQ workers, email system, and Starknet.js for on-chain execution.                         |
-| **Contracts** | Cairo smart contracts handling plan state, fund custody, and execution authorization.                                                              |
+| Layer             | Description                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend**      | React SPA with TailwindCSS, shadcn/ui, glassmorphism design system, Starknet wallet integration, DCA plan management, and real-time price display. |
+| **Backend**       | Express API with Prisma (PostgreSQL), Redis caching, BullMQ workers, and Starknet.js for on-chain execution.                                       |
+| **Email Service** | Standalone Vercel serverless functions handling all transactional emails (OTP, waitlist, launch). Backend calls it via HTTP.                       |
+| **Contracts**     | Cairo smart contracts handling plan state, fund custody, and execution authorization.                                                              |
 
 ---
 
@@ -75,11 +82,14 @@ StarkDCA/
 │   │   ├── prisma/                # Schema & migrations
 │   │   ├── src/
 │   │   │   ├── config/            # Environment loader
-│   │   │   ├── infrastructure/    # DB, Redis, Email, Logger
+│   │   │   ├── infrastructure/    # DB, Redis, Email (HTTP client), Logger
 │   │   │   ├── middleware/        # Auth, rate-limit, idempotency, validation
 │   │   │   ├── modules/           # admin, auth, dca, execution, price, waitlist
 │   │   │   └── utils/             # Errors, pagination, distributed lock
 │   │   └── jest.config.js
+│   ├── email-endpoint/     # Vercel serverless email service
+│   │   ├── api/                   # send-otp, send-email, health endpoints
+│   │   └── lib/                   # providers, templates, auth, validation
 │   └── contracts/          # Cairo + Scarb + Starknet Foundry
 │       ├── src/
 │       │   ├── dca.cairo          # Main DCA contract
@@ -107,7 +117,8 @@ StarkDCA/
 | Backend   | Node.js, Express 4, TypeScript, Prisma (PostgreSQL), Redis, BullMQ, Winston, JWT, Jest                                           |
 | Contracts | Cairo (edition 2024_07), Scarb, Starknet Foundry v0.35.0                                                                         |
 | Shared    | `@stark-dca/shared-types` — TypeScript types shared across apps                                                                  |
-| Infra     | Docker, Render (render.yaml), Vercel (frontend)                                                                                  |
+| Email     | Vercel serverless functions, NodeMailer / SendGrid, Zod validation                                                               |
+| Infra     | Docker, Render (backend), Vercel (frontend + email service)                                                                      |
 
 ---
 
@@ -185,21 +196,19 @@ Tests cover: plan creation, execution, completion, cancellation, and authorizati
 
 ### Backend (`apps/backend/.env`)
 
-| Variable               | Description                          |
-| ---------------------- | ------------------------------------ |
-| `PORT`                 | Server port (default: 4000)          |
-| `NODE_ENV`             | `development` or `production`        |
-| `DATABASE_URL`         | PostgreSQL connection string         |
-| `REDIS_URL`            | Redis connection string              |
-| `JWT_SECRET`           | Secret key for JWT tokens            |
-| `STARKNET_RPC_URL`     | Starknet RPC endpoint                |
-| `DCA_CONTRACT_ADDRESS` | Deployed DCA contract address        |
-| `EXECUTOR_PRIVATE_KEY` | Private key for the executor account |
-| `EXECUTOR_ADDRESS`     | Executor account address             |
-| `SMTP_HOST`            | Email SMTP host                      |
-| `SMTP_PORT`            | Email SMTP port                      |
-| `SMTP_USER`            | Email SMTP username                  |
-| `SMTP_PASS`            | Email SMTP password                  |
+| Variable                | Description                          |
+| ----------------------- | ------------------------------------ |
+| `PORT`                  | Server port (default: 4000)          |
+| `NODE_ENV`              | `development` or `production`        |
+| `DATABASE_URL`          | PostgreSQL connection string         |
+| `REDIS_URL`             | Redis connection string              |
+| `JWT_SECRET`            | Secret key for JWT tokens            |
+| `STARKNET_RPC_URL`      | Starknet RPC endpoint                |
+| `DCA_CONTRACT_ADDRESS`  | Deployed DCA contract address        |
+| `EXECUTOR_PRIVATE_KEY`  | Private key for the executor account |
+| `EXECUTOR_ADDRESS`      | Executor account address             |
+| `EMAIL_SERVICE_URL`     | Vercel email-endpoint URL            |
+| `EMAIL_SERVICE_API_KEY` | Shared secret with email service     |
 
 ### Frontend (`apps/frontend/.env`)
 
@@ -226,6 +235,18 @@ Tests cover: plan creation, execution, completion, cancellation, and authorizati
 docker build -t starkdca-backend .
 # Deploy to Render, Railway, Fly.io, or AWS ECS
 ```
+
+### Email Service
+
+```bash
+cd apps/email-endpoint
+npm install
+npx vercel --prod
+# Set env vars in Vercel dashboard (SMTP creds, EMAIL_SERVICE_API_KEY, etc.)
+# Then set EMAIL_SERVICE_URL + EMAIL_SERVICE_API_KEY on Render backend
+```
+
+See [apps/email-endpoint/README.md](apps/email-endpoint/README.md) for full setup details.
 
 ### Frontend
 

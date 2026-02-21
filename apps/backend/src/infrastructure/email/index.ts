@@ -1,222 +1,81 @@
-// ─── Email Service Abstraction ───────────────────────────────────────
-// Supports multiple email providers: NodeMailer (SMTP) and SendGrid.
-// Secure: Credentials loaded from environment variables.
+// ─── Email Service (HTTP Client) ─────────────────────────────────────
+// Sends emails via the external Vercel-hosted email-endpoint service.
+// Exposes the same interface as the original so no changes are needed
+// in auth, admin, launch, or waitlist services.
 
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 import { config } from '../../config';
 import { logger } from '../logger';
 
-interface EmailOptions {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
+interface EmailServiceResponse {
+  success: boolean;
+  data?: { sent: boolean; to: string; type?: string };
+  error?: string;
+  code?: string;
 }
 
-interface EmailProvider {
-  send(options: EmailOptions): Promise<boolean>;
-}
-
-// ─── NodeMailer Provider ─────────────────────────────────────────────
-class NodeMailerProvider implements EmailProvider {
-  private transporter: Transporter;
+class EmailService {
+  private client: AxiosInstance;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: config.email.smtp.host,
-      port: config.email.smtp.port,
-      secure: config.email.smtp.secure,
-      auth: {
-        user: config.email.smtp.user,
-        pass: config.email.smtp.pass,
+    this.client = axios.create({
+      baseURL: config.emailService.url,
+      timeout: 15_000, // 15 s — generous for cold-start Vercel functions
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.emailService.apiKey}`,
       },
     });
-  }
 
-  async send(options: EmailOptions): Promise<boolean> {
-    try {
-      await this.transporter.sendMail({
-        from: `"${config.email.from.name}" <${config.email.from.address}>`,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text,
-      });
-      logger.info({ to: options.to, subject: options.subject }, 'Email sent via NodeMailer');
-      return true;
-    } catch (error) {
-      logger.error({ error, to: options.to }, 'Failed to send email via NodeMailer');
-      return false;
-    }
-  }
-}
-
-// ─── SendGrid Provider ───────────────────────────────────────────────
-class SendGridProvider implements EmailProvider {
-  private apiKey: string;
-  private apiUrl = 'https://api.sendgrid.com/v3/mail/send';
-
-  constructor() {
-    this.apiKey = config.email.sendgrid.apiKey;
-  }
-
-  async send(options: EmailOptions): Promise<boolean> {
-    try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personalizations: [{ to: [{ email: options.to }] }],
-          from: {
-            email: config.email.from.address,
-            name: config.email.from.name,
-          },
-          subject: options.subject,
-          content: [
-            { type: 'text/html', value: options.html },
-            ...(options.text ? [{ type: 'text/plain', value: options.text }] : []),
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`SendGrid API error: ${response.status}`);
-      }
-
-      logger.info({ to: options.to, subject: options.subject }, 'Email sent via SendGrid');
-      return true;
-    } catch (error) {
-      logger.error({ error, to: options.to }, 'Failed to send email via SendGrid');
-      return false;
-    }
-  }
-}
-
-// ─── Email Service Factory ───────────────────────────────────────────
-class EmailService {
-  private provider: EmailProvider;
-
-  constructor() {
-    if (config.email.provider === 'sendgrid') {
-      this.provider = new SendGridProvider();
-    } else {
-      this.provider = new NodeMailerProvider();
-    }
-
-    // Diagnostic: log email config on startup (never log password)
-    const smtpUser = config.email.smtp.user;
-    const fromAddr = config.email.from.address;
     logger.info(
       {
-        provider: config.email.provider,
-        smtpHost: config.email.smtp.host,
-        smtpPort: config.email.smtp.port,
-        smtpUser: smtpUser ? `${smtpUser.slice(0, 4)}***` : '(not set)',
-        smtpPassSet: !!config.email.smtp.pass,
-        fromAddress: fromAddr,
+        emailServiceUrl: config.emailService.url
+          ? `${config.emailService.url.slice(0, 30)}...`
+          : '(not set)',
+        apiKeySet: !!config.emailService.apiKey,
       },
-      'Email service initialized',
+      'Email service initialized (HTTP client → Vercel email-endpoint)',
     );
-
-    // Warn if Gmail SMTP and from address doesn't match SMTP user
-    if (
-      config.email.smtp.host === 'smtp.gmail.com' &&
-      smtpUser &&
-      fromAddr &&
-      !fromAddr.toLowerCase().includes(smtpUser.toLowerCase().split('@')[0])
-    ) {
-      logger.warn(
-        { smtpUser, fromAddress: fromAddr },
-        'Gmail SMTP: EMAIL_FROM_ADDRESS does not match SMTP_USER — Gmail may reject or override the sender address. Set EMAIL_FROM_ADDRESS to your Gmail address.',
-      );
-    }
   }
 
-  async send(options: EmailOptions): Promise<boolean> {
-    // In development/test, log but skip actual sending if no credentials
-    if (!config.isProduction && !config.email.smtp.user && !config.email.sendgrid.apiKey) {
-      logger.info({ ...options }, '[DEV] Email would be sent (no credentials configured)');
-      return true;
-    }
+  // ─── OTP Email ───────────────────────────────────────────────────
 
-    // Warn loudly if production has no credentials configured
-    if (config.isProduction) {
-      const hasSmtp = !!config.email.smtp.user && !!config.email.smtp.pass;
-      const hasSendgrid = !!config.email.sendgrid.apiKey;
-      if (!hasSmtp && !hasSendgrid) {
-        logger.error(
-          { to: options.to, provider: config.email.provider },
-          'EMAIL SEND FAILED: No email credentials configured in production! Set SMTP_USER/SMTP_PASS or SENDGRID_API_KEY.',
-        );
-        return false;
-      }
-    }
-
-    return this.provider.send(options);
+  /**
+   * Send OTP verification email via the email-endpoint service.
+   */
+  async sendOtpEmail(to: string, name: string, otp: string): Promise<boolean> {
+    return this.callEndpoint('/api/send-otp', { to, name, otp }, 'sendOtpEmail');
   }
 
-  // ─── Pre-built Email Templates ─────────────────────────────────────
+  // ─── Transactional Emails ────────────────────────────────────────
+
   async sendWaitlistWelcome(to: string, name: string): Promise<boolean> {
-    const html = this.getWaitlistWelcomeTemplate(name);
-    return this.send({
-      to,
-      subject: 'Welcome to the StarkDCA Waitlist!',
-      html,
-      text: `Hi ${name}, thank you for joining the StarkDCA waitlist! You're now on the list for early access to our Bitcoin DCA platform on Starknet.`,
-    });
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'waitlist-welcome', to, name },
+      'sendWaitlistWelcome',
+    );
   }
 
   async sendSignupWelcome(to: string, name: string): Promise<boolean> {
-    const html = this.getSignupWelcomeTemplate(name);
-    return this.send({
-      to,
-      subject: 'Welcome to StarkDCA!',
-      html,
-      text: `Hi ${name}, welcome to StarkDCA! Your account has been created successfully.`,
-    });
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'signup-welcome', to, name },
+      'sendSignupWelcome',
+    );
   }
 
-  /**
-   * Send OTP verification email.
-   */
-  async sendOtpEmail(to: string, name: string, otp: string): Promise<boolean> {
-    const html = this.getOtpEmailTemplate(name, otp);
-    return this.send({
-      to,
-      subject: 'Your StarkDCA Verification Code',
-      html,
-      text: `Hi ${name}, your verification code is: ${otp}. It expires in 10 minutes.`,
-    });
-  }
-
-  /**
-   * Send "You're on the Waitlist" confirmation email after OTP verification.
-   */
   async sendWaitlistConfirmation(to: string, name: string, position: number): Promise<boolean> {
-    const html = this.getWaitlistConfirmationTemplate(name, position);
-    return this.send({
-      to,
-      subject: "You're on the Waitlist 🎉",
-      html,
-      text: `Hi ${name}, your email has been verified and you're #${position} on our waitlist! We'll notify you as soon as we launch.`,
-    });
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'waitlist-confirmation', to, name, position },
+      'sendWaitlistConfirmation',
+    );
   }
 
-  /**
-   * Send platform launch email.
-   */
   async sendLaunchEmail(to: string, name: string): Promise<boolean> {
-    const html = this.getLaunchEmailTemplate(name);
-    return this.send({
-      to,
-      subject: '🚀 StarkDCA is Live — Your Dashboard is Ready!',
-      html,
-      text: `Hi ${name}, great news! StarkDCA is officially live. Your dashboard is now unlocked. Log in and start building your Bitcoin wealth: ${config.frontend.url}/dashboard`,
-    });
+    return this.callEndpoint('/api/send-email', { type: 'launch', to, name }, 'sendLaunchEmail');
   }
 
   async sendCustomEmail(
@@ -225,301 +84,62 @@ class EmailService {
     templateName: string,
     variables: Record<string, string>,
   ): Promise<boolean> {
-    let html = this.getCustomTemplate(templateName);
-
-    // Replace template variables
-    Object.entries(variables).forEach(([key, value]) => {
-      html = html.replace(new RegExp(`{{${key}}}`, 'g'), value);
-    });
-
-    return this.send({ to, subject, html });
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'custom', to, name: variables.name || 'there', subject, templateName, variables },
+      'sendCustomEmail',
+    );
   }
 
-  // ─── Email Templates ───────────────────────────────────────────────
-  private getWaitlistWelcomeTemplate(name: string): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to StarkDCA Waitlist</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">🎉 You're on the List!</h1>
-  </div>
-  
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 18px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-    
-    <p>Thank you for joining the <strong>StarkDCA</strong> waitlist! You're now secured a spot for early access to our revolutionary Bitcoin DCA platform built on Starknet.</p>
-    
-    <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-      <h3 style="margin: 0 0 10px 0; color: #667eea;">What's Coming:</h3>
-      <ul style="margin: 0; padding-left: 20px; color: #4a4a6a;">
-        <li>Automated Dollar-Cost Averaging into BTC</li>
-        <li>Non-custodial & fully on-chain execution</li>
-        <li>Low gas fees powered by Starknet</li>
-        <li>Smart scheduling: daily, weekly, or monthly</li>
-      </ul>
-    </div>
-    
-    <p>We'll notify you as soon as we launch. In the meantime, follow us on Twitter for updates!</p>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="https://x.com/DcaStark23076" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Follow @DcaStark23076</a>
-    </div>
-    
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Building the future of Bitcoin investment on Starknet</em>
-    </p>
-  </div>
-</body>
-</html>`;
-  }
+  // ─── Internal HTTP Helper ────────────────────────────────────────
 
-  private getSignupWelcomeTemplate(name: string): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to StarkDCA</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">₿ Welcome to StarkDCA!</h1>
-  </div>
-  
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 18px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-    
-    <p>Your StarkDCA account has been created successfully! You're now ready to start automating your Bitcoin investments.</p>
-    
-    <div style="background: #fff8f0; border-left: 4px solid #f7931a; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-      <h3 style="margin: 0 0 10px 0; color: #f7931a;">Getting Started:</h3>
-      <ol style="margin: 0; padding-left: 20px; color: #4a4a6a;">
-        <li>Connect your Starknet wallet</li>
-        <li>Create your first DCA plan</li>
-        <li>Fund your wallet and watch the automation work</li>
-      </ol>
-    </div>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${config.frontend.url}/dashboard" style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Go to Dashboard</a>
-    </div>
-    
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Stack sats. Stay sovereign.</em>
-    </p>
-  </div>
-</body>
-</html>`;
-  }
+  private async callEndpoint(
+    path: string,
+    payload: Record<string, unknown>,
+    method: string,
+  ): Promise<boolean> {
+    // In dev/test, skip if no email service URL configured
+    if (!config.emailService.url) {
+      if (!config.isProduction) {
+        logger.info(
+          { method, ...payload },
+          '[DEV] Email would be sent (EMAIL_SERVICE_URL not set)',
+        );
+        return true;
+      }
+      logger.error({ method }, 'EMAIL_SERVICE_URL is not configured in production');
+      return false;
+    }
 
-  private getOtpEmailTemplate(name: string, otp: string): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Your Email</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">Verify Your Email</h1>
-    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">One step closer to your StarkDCA account</p>
-  </div>
+    try {
+      const response = await this.client.post<EmailServiceResponse>(path, payload);
 
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
+      if (response.data.success) {
+        logger.info({ method, to: payload.to }, 'Email sent via email-endpoint');
+        return true;
+      }
 
-    <p style="color: #555;">Use the verification code below to confirm your email address:</p>
-
-    <div style="text-align: center; margin: 30px 0;">
-      <div style="display: inline-block; background: #F4F4F4; border: 2px dashed #CDA41B; border-radius: 12px; padding: 20px 40px;">
-        <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #1F3878; font-family: 'Poppins', monospace;">${otp}</span>
-      </div>
-    </div>
-
-    <p style="color: #888; font-size: 14px; text-align: center;">This code expires in <strong>10 minutes</strong>.</p>
-
-    <div style="background: #FFF8F0; border-left: 4px solid #FE6606; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-      <p style="margin: 0; font-size: 13px; color: #666;">If you didn't create a StarkDCA account, you can safely ignore this email.</p>
-    </div>
-
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-  </div>
-</body>
-</html>`;
-  }
-
-  private getWaitlistConfirmationTemplate(name: string, position: number): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You're on the Waitlist!</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px; font-family: 'Poppins', sans-serif;">🎉 You're on the Waitlist!</h1>
-    <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0;">Your email has been verified successfully</p>
-  </div>
-
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-
-    <p>Congratulations! Your email has been verified and you're officially on the StarkDCA waitlist.</p>
-
-    <div style="text-align: center; margin: 30px 0;">
-      <div style="display: inline-block; background: linear-gradient(135deg, #FFF8F0, #FEF3E0); border: 2px solid #CDA41B; border-radius: 16px; padding: 25px 40px;">
-        <p style="margin: 0 0 5px 0; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 2px;">Your Position</p>
-        <span style="font-size: 48px; font-weight: 700; color: #CDA41B; font-family: 'Poppins', sans-serif;">#${position}</span>
-      </div>
-    </div>
-
-    <div style="background: #F8F9FF; border-left: 4px solid #1F3878; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-      <h3 style="margin: 0 0 10px 0; color: #1F3878; font-family: 'Poppins', sans-serif;">What's Next?</h3>
-      <p style="margin: 0; color: #555; font-size: 14px;">
-        We are currently finalizing our smart contract and dashboard system.
-        You are officially on our waitlist and will be among the first to access StarkDCA when we launch.
-      </p>
-      <p style="margin: 10px 0 0 0; color: #555; font-size: 14px;">
-        We will send you an official launch email as soon as we're ready. Stay tuned!
-      </p>
-    </div>
-
-    <div style="background: #FFF8F0; border-left: 4px solid #FE6606; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-      <h4 style="margin: 0 0 8px 0; color: #FE6606;">What to Expect:</h4>
-      <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
-        <li>Automated Dollar-Cost Averaging into BTC</li>
-        <li>Non-custodial & fully on-chain execution on Starknet</li>
-        <li>Low gas fees & smart scheduling</li>
-        <li>Priority access for waitlist members</li>
-      </ul>
-    </div>
-
-    <p>In the meantime, follow us on Twitter for the latest updates!</p>
-
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="https://x.com/DcaStark23076" style="background: #1F3878; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; font-family: 'Poppins', sans-serif;">Follow @DcaStark23076</a>
-    </div>
-
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Building the future of Bitcoin investment on Starknet</em>
-    </p>
-  </div>
-</body>
-</html>`;
-  }
-
-  private getLaunchEmailTemplate(name: string): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StarkDCA is Live!</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #FE6606 0%, #CDA41B 100%); padding: 50px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 32px; font-family: 'Poppins', sans-serif;">🚀 We're Live!</h1>
-    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your dashboard is now unlocked</p>
-  </div>
-
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 18px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-
-    <p style="font-size: 16px;">The wait is over! <strong>StarkDCA is officially live</strong> and your dashboard is now unlocked.</p>
-
-    <p style="color: #555;">As a waitlist member, you have priority access to all features:</p>
-
-    <div style="background: #F8F9FF; border-left: 4px solid #1F3878; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-      <ul style="margin: 0; padding-left: 20px; color: #555;">
-        <li style="margin-bottom: 8px;">✅ Create automated DCA plans</li>
-        <li style="margin-bottom: 8px;">✅ Connect your Starknet wallet</li>
-        <li style="margin-bottom: 8px;">✅ Set up daily, weekly, or monthly strategies</li>
-        <li>✅ Track your portfolio in real-time</li>
-      </ul>
-    </div>
-
-    <div style="text-align: center; margin: 35px 0;">
-      <a href="${config.frontend.url}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 16px 40px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-size: 16px; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.4);">Go to Dashboard →</a>
-    </div>
-
-    <p style="color: #888; font-size: 14px; text-align: center;">Welcome to the future of Bitcoin investment on Starknet.</p>
-
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Stack sats. Stay sovereign.</em>
-    </p>
-  </div>
-</body>
-</html>`;
-  }
-
-  private getCustomTemplate(templateName: string): string {
-    // Base template that can be customized with variables
-    const templates: Record<string, string> = {
-      announcement: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">{{title}}</h1>
-  </div>
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p>Hi {{name}},</p>
-    <p>{{content}}</p>
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-  </div>
-</body>
-</html>`,
-      launch: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">🚀 We're Live!</h1>
-  </div>
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p>Hi {{name}},</p>
-    <p>Great news! StarkDCA is now live and you have early access as a waitlist member!</p>
-    <p>{{content}}</p>
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${config.frontend.url}/signup" style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Create Your Account</a>
-    </div>
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-  </div>
-</body>
-</html>`,
-    };
-
-    return templates[templateName] || templates.announcement;
+      logger.error(
+        { method, to: payload.to, error: response.data.error, code: response.data.code },
+        'Email endpoint returned failure',
+      );
+      return false;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const body = error.response?.data;
+        logger.error(
+          { method, to: payload.to, status, error: body?.error || error.message },
+          'Failed to call email-endpoint',
+        );
+      } else {
+        logger.error(
+          { method, to: payload.to, error: error instanceof Error ? error.message : error },
+          'Unexpected error calling email-endpoint',
+        );
+      }
+      return false;
+    }
   }
 }
 
