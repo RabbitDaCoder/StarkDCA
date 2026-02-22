@@ -15,16 +15,21 @@ import { useAuthStore } from '@/store/auth.store';
 import { useWalletStore } from '@/store/wallet.store';
 import { ThemeToggle } from '@/components/landing/ThemeToggle';
 
-export function Navbar() {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuthStore();
   const { address, connected, connecting, connect } = useWalletStore();
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 sm:px-6">
       {/* Mobile logo & menu */}
-      <div className="flex items-center gap-4 lg:hidden">
-        <Button variant="ghost" size="icon" className="lg:hidden">
+      <div className="flex items-center gap-3 lg:hidden">
+        <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
           <Menu className="h-5 w-5" />
+          <span className="sr-only">Open menu</span>
         </Button>
         <div className="flex items-center gap-2">
           <img src={starkDCALogo} alt="StarkDCA" className="h-8 w-auto" />

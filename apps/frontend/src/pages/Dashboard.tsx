@@ -49,7 +49,7 @@ export default function Dashboard() {
             Monitor your DCA plans and track your BTC accumulation.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Wallet connect / status */}
           {connected && address ? (
             <div className="flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/5 px-3 py-2">
@@ -79,24 +79,28 @@ export default function Dashboard() {
               onClick={connect}
               disabled={connecting}
               variant="outline"
+              size="sm"
               className="gap-2 border-brand-orange/50 text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange"
             >
               <Wallet className="h-4 w-4" />
-              {connecting ? 'Connecting...' : 'Connect Wallet'}
+              <span className="hidden sm:inline">{connecting ? 'Connecting...' : 'Connect Wallet'}</span>
+              <span className="sm:hidden">{connecting ? '...' : 'Wallet'}</span>
             </Button>
           )}
           <Link to="/app/history">
-            <Button variant="outline" className="gap-2 border-border/50">
+            <Button variant="outline" size="sm" className="gap-2 border-border/50">
               <Activity className="h-4 w-4" />
-              Activity
+              <span className="hidden sm:inline">Activity</span>
             </Button>
           </Link>
           <Button
             onClick={() => setCreateOpen(true)}
+            size="sm"
             className="gap-2 bg-brand-orange hover:bg-brand-orange/90 shadow-lg"
           >
             <Plus className="h-4 w-4" />
-            Create New Plan
+            <span className="hidden sm:inline">Create New Plan</span>
+            <span className="sm:hidden">New Plan</span>
           </Button>
         </div>
       </div>
