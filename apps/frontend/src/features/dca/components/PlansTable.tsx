@@ -52,10 +52,10 @@ export function PlansTable({ plans, onCancel }: Props) {
   if (plans.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-brand-gray flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <Repeat className="h-8 w-8 text-muted-foreground/50" />
         </div>
-        <p className="font-heading font-semibold text-brand-blue mb-1">No DCA plans yet</p>
+        <p className="font-heading font-semibold text-foreground mb-1">No DCA plans yet</p>
         <p className="text-sm text-muted-foreground max-w-sm">
           Create your first plan to start accumulating BTC automatically.
         </p>
@@ -66,13 +66,13 @@ export function PlansTable({ plans, onCancel }: Props) {
   return (
     <Table>
       <TableHeader>
-        <TableRow className="bg-brand-gray/50 hover:bg-brand-gray/50">
-          <TableHead className="font-heading text-brand-blue">Plan</TableHead>
-          <TableHead className="font-heading text-brand-blue">Amount</TableHead>
-          <TableHead className="font-heading text-brand-blue">Frequency</TableHead>
-          <TableHead className="font-heading text-brand-blue">Progress</TableHead>
-          <TableHead className="font-heading text-brand-blue">Next Execution</TableHead>
-          <TableHead className="font-heading text-brand-blue">Status</TableHead>
+        <TableRow className="bg-muted/50 hover:bg-muted/50">
+          <TableHead className="font-heading text-foreground">Plan</TableHead>
+          <TableHead className="font-heading text-foreground">Amount</TableHead>
+          <TableHead className="font-heading text-foreground">Frequency</TableHead>
+          <TableHead className="font-heading text-foreground">Progress</TableHead>
+          <TableHead className="font-heading text-foreground">Next Execution</TableHead>
+          <TableHead className="font-heading text-foreground">Status</TableHead>
           <TableHead className="w-[50px]" />
         </TableRow>
       </TableHeader>
@@ -85,7 +85,7 @@ export function PlansTable({ plans, onCancel }: Props) {
               : 0;
 
           return (
-            <TableRow key={plan.id} className="hover:bg-brand-gray/30 transition-colors">
+            <TableRow key={plan.id} className="hover:bg-muted/50 transition-colors">
               <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-brand-orange/10 flex items-center justify-center">
@@ -95,14 +95,14 @@ export function PlansTable({ plans, onCancel }: Props) {
                 </div>
               </TableCell>
               <TableCell>
-                <span className="font-semibold text-gold">
+                <span className="font-semibold text-brand-gold">
                   {formatCurrency(parseFloat(plan.amountPerExecution))}
                 </span>
               </TableCell>
               <TableCell className="capitalize text-muted-foreground">{plan.interval}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div className="h-2 w-20 overflow-hidden rounded-full bg-brand-gray">
+                  <div className="h-2 w-20 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-brand-orange transition-all"
                       style={{ width: `${progress}%` }}
@@ -115,7 +115,7 @@ export function PlansTable({ plans, onCancel }: Props) {
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {plan.status === PlanStatus.Active ? (
-                  <span className="font-medium text-brand-blue">
+                  <span className="font-medium text-primary">
                     {timeUntil(plan.nextExecutionAt)}
                   </span>
                 ) : (
@@ -131,7 +131,7 @@ export function PlansTable({ plans, onCancel }: Props) {
                 {plan.status === PlanStatus.Active && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-brand-gray">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>

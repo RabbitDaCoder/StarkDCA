@@ -32,6 +32,32 @@ class DcaController {
   }
 
   /**
+   * GET /api/v1/plans/portfolio
+   * Get portfolio summary for the authenticated user.
+   */
+  async getPortfolioSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const summary = await dcaService.getPortfolioSummary(req.user!.userId);
+      res.json(successResponse(summary));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/v1/plans/executions
+   * Get all execution history across all plans for the user.
+   */
+  async getAllExecutions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await dcaService.getAllExecutions(req.user!.userId, req.query as any);
+      res.json(successResponse(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * GET /api/v1/plans/:planId
    * Get a single plan by ID.
    */

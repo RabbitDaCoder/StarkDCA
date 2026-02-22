@@ -56,7 +56,7 @@ export default function Login() {
       } else if (!user?.launchAccessGranted) {
         navigate('/waitlist');
       } else {
-        navigate('/dashboard');
+        navigate('/app/dashboard');
       }
     } catch {
       // Error handled by store

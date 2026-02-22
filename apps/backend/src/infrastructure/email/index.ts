@@ -99,6 +99,62 @@ class EmailService {
     );
   }
 
+  // ─── DCA Plan Event Emails ───────────────────────────────────────
+
+  async sendPlanActivatedEmail(
+    to: string,
+    name: string,
+    planDetails: {
+      amount: string;
+      interval: string;
+      totalExecutions: number;
+      totalDeposit: string;
+    },
+  ): Promise<boolean> {
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'plan-activated', to, name, planDetails },
+      'sendPlanActivatedEmail',
+    );
+  }
+
+  async sendBtcAccumulatedEmail(
+    to: string,
+    name: string,
+    executionDetails: {
+      amountIn: string;
+      amountOut: string;
+      price: string;
+      executionNumber: number;
+      totalExecutions: number;
+      planInterval: string;
+      txHash: string;
+    },
+  ): Promise<boolean> {
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'btc-accumulated', to, name, executionDetails },
+      'sendBtcAccumulatedEmail',
+    );
+  }
+
+  async sendPlanCancelledEmail(
+    to: string,
+    name: string,
+    planDetails: {
+      amount: string;
+      interval: string;
+      executionsCompleted: number;
+      totalExecutions: number;
+    },
+  ): Promise<boolean> {
+    return this.callEndpoint(
+      '/api/send-email',
+      { type: 'plan-cancelled', to, name, planDetails },
+      'sendPlanCancelledEmail',
+    );
+  }
+
   // ─── Internal HTTP Helper ────────────────────────────────────────
 
   private async callEndpoint(

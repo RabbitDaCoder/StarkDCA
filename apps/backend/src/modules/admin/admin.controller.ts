@@ -297,3 +297,81 @@ export async function getLaunchStatus(
     next(error);
   }
 }
+
+// ─── Platform Overview ─────────────────────────────────────────────
+export async function getPlatformOverview(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const overview = await adminService.getPlatformOverview();
+    res.json(successResponse(overview));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ─── All Plans (admin) ─────────────────────────────────────────────
+export async function getAllPlans(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await adminService.getAllPlans(req.query as any);
+    res.json(successResponse(result));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ─── System Health ─────────────────────────────────────────────────
+export async function getSystemHealth(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const health = await adminService.getSystemHealth();
+    res.json(successResponse(health));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ─── User Suspend / Reactivate ─────────────────────────────────────
+export async function suspendUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { userId } = req.params;
+    const user = await adminService.suspendUser(userId);
+    res.json(successResponse(user));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function reactivateUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { userId } = req.params;
+    const user = await adminService.reactivateUser(userId);
+    res.json(successResponse(user));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ─── Execution Analytics ───────────────────────────────────────────
+export async function getExecutionAnalytics(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const days = parseInt(req.query.days as string) || 30;
+    const analytics = await adminService.getExecutionAnalytics(days);
+    res.json(successResponse(analytics));
+  } catch (error) {
+    next(error);
+  }
+}

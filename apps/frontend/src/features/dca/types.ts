@@ -4,6 +4,8 @@ import type {
   Interval,
   ExecutionLog,
   PriceData,
+  PortfolioSummary,
+  ExecutionWithPlan,
 } from '@stark-dca/shared-types';
 
 // ─── Dashboard summary ──────────────────────────────────────
@@ -28,4 +30,12 @@ export interface PlanRow {
 }
 
 // Re-export shared types for convenience
-export type { DCAPlan, CreatePlanRequest, Interval, ExecutionLog, PriceData };
+export type {
+  DCAPlan,
+  CreatePlanRequest,
+  Interval,
+  ExecutionLog,
+  PriceData,
+  PortfolioSummary,
+  ExecutionWithPlan,
+};

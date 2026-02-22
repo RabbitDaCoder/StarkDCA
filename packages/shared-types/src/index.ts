@@ -81,3 +81,31 @@ export interface ExecutionLog {
   priceAtExecution: number;
   txHash: string;
 }
+
+// ─── Portfolio Summary ───────────────────────────────────────
+
+export interface PortfolioSummary {
+  activePlans: number;
+  totalPlans: number;
+  totalDeposited: number;
+  totalInvested: number;
+  btcAccumulated: number;
+  avgEntryPrice: number;
+  totalExecutions: number;
+  successfulExecutions: number;
+  failedExecutions: number;
+  nextExecutionAt: number | null;
+}
+
+// ─── Execution with Plan context ─────────────────────────────
+
+export interface ExecutionWithPlan extends ExecutionLog {
+  executionNumber: number;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  errorMessage?: string | null;
+  plan?: {
+    amountPerExecution: string;
+    interval: string;
+    targetTokenAddress: string;
+  };
+}

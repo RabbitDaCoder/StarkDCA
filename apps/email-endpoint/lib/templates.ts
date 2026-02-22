@@ -314,6 +314,229 @@ export function getLaunchEmailTemplate(
   return { html, text };
 }
 
+// ─── DCA Plan Event Templates ────────────────────────────────────────
+
+export function getPlanActivatedTemplate(
+  name: string,
+  planDetails: {
+    amount: string;
+    interval: string;
+    totalExecutions: number;
+    totalDeposit: string;
+  },
+  frontendUrl: string,
+): { html: string; text: string } {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DCA Plan Activated</title>
+</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
+  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">✅ DCA Plan Activated</h1>
+    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Your Bitcoin accumulation has begun</p>
+  </div>
+
+  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
+
+    <p style="color: #555;">Your new DCA plan has been successfully created and is now active. Here are the details:</p>
+
+    <div style="background: #F8F9FF; border: 1px solid #E8ECFF; border-radius: 12px; padding: 24px; margin: 25px 0;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; color: #888; font-size: 14px;">Amount per buy</td>
+          <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1F3878; font-size: 14px;">${planDetails.amount} USDT</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888; font-size: 14px; border-top: 1px solid #EEE;">Frequency</td>
+          <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1F3878; font-size: 14px; border-top: 1px solid #EEE;">${planDetails.interval}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888; font-size: 14px; border-top: 1px solid #EEE;">Total buys</td>
+          <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1F3878; font-size: 14px; border-top: 1px solid #EEE;">${planDetails.totalExecutions}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888; font-size: 14px; border-top: 1px solid #EEE;">Total deposit</td>
+          <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #CDA41B; font-size: 16px; border-top: 1px solid #EEE;">${planDetails.totalDeposit} USDT</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="color: #555; font-size: 14px;">Your first execution will run automatically based on your selected schedule. You can monitor progress from your dashboard.</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.3);">View Dashboard</a>
+    </div>
+
+    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
+      – The StarkDCA Team<br>
+      <em>Stack sats. Stay sovereign.</em>
+    </p>
+  </div>
+</body>
+</html>`;
+
+  const text = `Hi ${name}, your DCA plan has been activated! ${planDetails.amount} USDT → BTC, ${planDetails.interval}, ${planDetails.totalExecutions} buys, total deposit: ${planDetails.totalDeposit} USDT. View your dashboard: ${frontendUrl}/dashboard`;
+
+  return { html, text };
+}
+
+export function getBtcAccumulatedTemplate(
+  name: string,
+  executionDetails: {
+    amountIn: string;
+    amountOut: string;
+    price: string;
+    executionNumber: number;
+    totalExecutions: number;
+    planInterval: string;
+    txHash: string;
+  },
+  frontendUrl: string,
+): { html: string; text: string } {
+  const progress = Math.round(
+    (executionDetails.executionNumber / executionDetails.totalExecutions) * 100,
+  );
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTC Accumulated</title>
+</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
+  <div style="background: linear-gradient(135deg, #f7931a 0%, #CDA41B 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">₿ BTC Accumulated!</h1>
+    <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0 0; font-size: 14px;">Your ${executionDetails.planInterval} DCA buy was executed</p>
+  </div>
+
+  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
+
+    <p style="color: #555;">Your DCA plan just executed successfully. Here's your accumulation summary:</p>
+
+    <div style="text-align: center; margin: 25px 0;">
+      <div style="display: inline-block; background: linear-gradient(135deg, #FFF8F0, #FEF3E0); border: 2px solid #CDA41B; border-radius: 16px; padding: 25px 40px;">
+        <p style="margin: 0 0 5px 0; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 2px;">BTC Received</p>
+        <span style="font-size: 32px; font-weight: 700; color: #f7931a; font-family: 'Poppins', sans-serif;">${executionDetails.amountOut}</span>
+        <p style="margin: 5px 0 0 0; font-size: 13px; color: #888;">at $${executionDetails.price}/BTC</p>
+      </div>
+    </div>
+
+    <div style="background: #F8F9FF; border: 1px solid #E8ECFF; border-radius: 12px; padding: 20px; margin: 25px 0;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 6px 0; color: #888; font-size: 14px;">Amount spent</td>
+          <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #1F3878; font-size: 14px;">${executionDetails.amountIn} USDT</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #888; font-size: 14px; border-top: 1px solid #EEE;">Execution</td>
+          <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #1F3878; font-size: 14px; border-top: 1px solid #EEE;">${executionDetails.executionNumber} of ${executionDetails.totalExecutions}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #888; font-size: 14px; border-top: 1px solid #EEE;">Progress</td>
+          <td style="padding: 6px 0; text-align: right; font-size: 14px; border-top: 1px solid #EEE;">
+            <div style="display: inline-block; width: 100px; height: 8px; background: #EEE; border-radius: 4px; overflow: hidden; vertical-align: middle;">
+              <div style="width: ${progress}%; height: 100%; background: linear-gradient(90deg, #FE6606, #f7931a); border-radius: 4px;"></div>
+            </div>
+            <span style="font-weight: 600; color: #1F3878; margin-left: 8px;">${progress}%</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="color: #888; font-size: 13px; text-align: center;">
+      Tx: <a href="https://starkscan.co/tx/${executionDetails.txHash}" style="color: #1F3878;">${executionDetails.txHash.slice(0, 10)}...${executionDetails.txHash.slice(-8)}</a>
+    </p>
+
+    <div style="text-align: center; margin: 25px 0;">
+      <a href="${frontendUrl}/dashboard/activity" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.3);">View Activity</a>
+    </div>
+
+    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
+      – The StarkDCA Team<br>
+      <em>Stack sats. Stay sovereign.</em>
+    </p>
+  </div>
+</body>
+</html>`;
+
+  const text = `Hi ${name}, your DCA plan executed! You received ${executionDetails.amountOut} BTC for ${executionDetails.amountIn} USDT at $${executionDetails.price}/BTC. Execution ${executionDetails.executionNumber}/${executionDetails.totalExecutions}. Tx: ${executionDetails.txHash}`;
+
+  return { html, text };
+}
+
+export function getPlanCancelledTemplate(
+  name: string,
+  planDetails: {
+    amount: string;
+    interval: string;
+    executionsCompleted: number;
+    totalExecutions: number;
+  },
+  frontendUrl: string,
+): { html: string; text: string } {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DCA Plan Cancelled</title>
+</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
+  <div style="background: linear-gradient(135deg, #4A4A6A 0%, #2d2d4a 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">DCA Plan Cancelled</h1>
+    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Your plan has been stopped</p>
+  </div>
+
+  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
+
+    <p style="color: #555;">Your DCA plan has been cancelled. Here's a summary of the plan:</p>
+
+    <div style="background: #F8F9FF; border: 1px solid #E8ECFF; border-radius: 12px; padding: 24px; margin: 25px 0;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; color: #888; font-size: 14px;">Plan</td>
+          <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1F3878; font-size: 14px;">${planDetails.amount} USDT / ${planDetails.interval}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888; font-size: 14px; border-top: 1px solid #EEE;">Completed</td>
+          <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1F3878; font-size: 14px; border-top: 1px solid #EEE;">${planDetails.executionsCompleted} of ${planDetails.totalExecutions} buys</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888; font-size: 14px; border-top: 1px solid #EEE;">Status</td>
+          <td style="padding: 8px 0; text-align: right; font-size: 14px; border-top: 1px solid #EEE;">
+            <span style="background: #FEE2E2; color: #DC2626; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 13px;">Cancelled</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="color: #555; font-size: 14px;">Any BTC already accumulated from completed executions remains in your wallet. You can create a new plan anytime.</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.3);">Create New Plan</a>
+    </div>
+
+    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
+      – The StarkDCA Team
+    </p>
+  </div>
+</body>
+</html>`;
+
+  const text = `Hi ${name}, your DCA plan (${planDetails.amount} USDT / ${planDetails.interval}) has been cancelled. ${planDetails.executionsCompleted}/${planDetails.totalExecutions} buys were completed. Create a new plan: ${frontendUrl}/dashboard`;
+
+  return { html, text };
+}
+
 export function getCustomTemplate(
   templateName: string,
   variables: Record<string, string>,

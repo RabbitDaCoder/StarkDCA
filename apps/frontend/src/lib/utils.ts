@@ -17,6 +17,12 @@ export function formatBtc(value: number): string {
   return `${value.toFixed(8)} BTC`;
 }
 
+export function formatBtcShort(value: number): string {
+  if (value >= 1) return `${value.toFixed(4)} BTC`;
+  if (value >= 0.01) return `${value.toFixed(6)} BTC`;
+  return `${value.toFixed(8)} BTC`;
+}
+
 export function shortenAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
@@ -35,4 +41,15 @@ export function timeUntil(timestamp: number): string {
   }
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
+}
+
+export function formatDate(timestamp: number | string): string {
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

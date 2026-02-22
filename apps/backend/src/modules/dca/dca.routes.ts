@@ -83,6 +83,46 @@ router.get('/', validate({ query: listPlansQuerySchema }), (req, res, next) =>
 
 /**
  * @swagger
+ * /api/v1/plans/portfolio:
+ *   get:
+ *     summary: Get portfolio summary for the authenticated user
+ *     tags: [DCA Plans]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Portfolio summary with aggregate stats
+ */
+router.get('/portfolio', (req, res, next) => dcaController.getPortfolioSummary(req, res, next));
+
+/**
+ * @swagger
+ * /api/v1/plans/executions:
+ *   get:
+ *     summary: Get all execution history across all plans
+ *     tags: [DCA Plans]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Paginated execution history across all plans
+ */
+router.get('/executions', validate({ query: executionLogsQuerySchema }), (req, res, next) =>
+  dcaController.getAllExecutions(req, res, next),
+);
+
+/**
+ * @swagger
  * /api/v1/plans/{planId}:
  *   get:
  *     summary: Get a DCA plan by ID

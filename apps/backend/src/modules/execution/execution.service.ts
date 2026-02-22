@@ -9,6 +9,7 @@ import { withLock } from '../../utils/distributed-lock';
 import { logger } from '../../infrastructure/logger';
 import { priceService } from '../price/price.service';
 import { dcaService } from '../dca/dca.service';
+import { emailService } from '../../infrastructure/email';
 
 const EXECUTION_LOCK_PREFIX = 'dca-execution:';
 
@@ -231,6 +232,23 @@ class ExecutionService {
         cacheDel(`plan:${planId}`).catch(() => {});
         cacheDelPattern(`user-plans:${plan.userId}:*`).catch(() => {});
 
+        // 8. Send BTC accumulated email notification (non-blocking)
+        const intervalMap: Record<string, string> = {
+          DAILY: 'daily',
+          WEEKLY: 'weekly',
+          BIWEEKLY: 'biweekly',
+          MONTHLY: 'monthly',
+        };
+        this.sendAccumulationEmail(plan.userId, {
+          amountIn,
+          amountOut,
+          price: priceData.price.toFixed(2),
+          executionNumber,
+          totalExecutions: plan.totalExecutions,
+          planInterval: intervalMap[plan.interval] || plan.interval,
+          txHash: txHash || '',
+        }).catch((err) => logger.error({ err, planId }, 'Failed to send btc-accumulated email'));
+
         logger.info(
           { planId, executionNumber, amountOut, price: priceData.price, txHash },
           `Plan executed — bought ${amountOut} BTC at $${priceData.price}`,
@@ -253,6 +271,27 @@ class ExecutionService {
         isolationLevel: 'Serializable',
       },
     );
+  }
+
+  private async sendAccumulationEmail(
+    userId: string,
+    executionDetails: {
+      amountIn: string;
+      amountOut: string;
+      price: string;
+      executionNumber: number;
+      totalExecutions: number;
+      planInterval: string;
+      txHash: string;
+    },
+  ): Promise<void> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true },
+    });
+    if (!user?.email) return;
+
+    await emailService.sendBtcAccumulatedEmail(user.email, user.name || 'there', executionDetails);
   }
 
   private buildResult(

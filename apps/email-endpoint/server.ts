@@ -17,6 +17,9 @@ import {
   getLaunchEmailTemplate,
   getCustomTemplate,
   getPasswordResetTemplate,
+  getPlanActivatedTemplate,
+  getBtcAccumulatedTemplate,
+  getPlanCancelledTemplate,
 } from './lib/templates';
 import { handleCors, sendSuccess, sendError } from './lib/response';
 import type { EmailOptions } from './lib/types';
@@ -158,6 +161,59 @@ async function handleSendEmail(req: VercelRequest, res: VercelResponse): Promise
           config.frontendUrl,
         );
         emailOptions = { to, subject, html: tpl.html };
+        break;
+      }
+
+      case 'plan-activated': {
+        const { planDetails } = validation.data as any;
+        if (!planDetails) {
+          sendError(res, 'planDetails is required for plan-activated', 422, 'VALIDATION_ERROR');
+          return;
+        }
+        const tpl = getPlanActivatedTemplate(name, planDetails, config.frontendUrl);
+        emailOptions = {
+          to,
+          subject: '✅ Your DCA Plan is Active — StarkDCA',
+          html: tpl.html,
+          text: tpl.text,
+        };
+        break;
+      }
+
+      case 'btc-accumulated': {
+        const { executionDetails } = validation.data as any;
+        if (!executionDetails) {
+          sendError(
+            res,
+            'executionDetails is required for btc-accumulated',
+            422,
+            'VALIDATION_ERROR',
+          );
+          return;
+        }
+        const tpl = getBtcAccumulatedTemplate(name, executionDetails, config.frontendUrl);
+        emailOptions = {
+          to,
+          subject: `₿ ${executionDetails.amountOut} BTC Accumulated — StarkDCA`,
+          html: tpl.html,
+          text: tpl.text,
+        };
+        break;
+      }
+
+      case 'plan-cancelled': {
+        const { planDetails: cancelDetails } = validation.data as any;
+        if (!cancelDetails) {
+          sendError(res, 'planDetails is required for plan-cancelled', 422, 'VALIDATION_ERROR');
+          return;
+        }
+        const tpl = getPlanCancelledTemplate(name, cancelDetails, config.frontendUrl);
+        emailOptions = {
+          to,
+          subject: 'DCA Plan Cancelled — StarkDCA',
+          html: tpl.html,
+          text: tpl.text,
+        };
         break;
       }
 

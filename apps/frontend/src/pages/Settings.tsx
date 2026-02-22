@@ -1,12 +1,24 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useAuthStore } from '@/store/auth.store';
 import { useWalletStore } from '@/store/wallet.store';
-import { Wallet, Globe, Shield, Bell, User } from 'lucide-react';
+import { Wallet, Globe, Shield, Bell, User, Copy, Check, LogOut, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 
 export default function SettingsPage() {
-  const { address, connected } = useWalletStore();
+  const { user, logout } = useAuthStore();
+  const { address, connected, connecting, connect, disconnect } = useWalletStore();
+  const [copied, setCopied] = useState(false);
+
+  const copyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-[700px] space-y-6">
@@ -20,6 +32,64 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
         </div>
       </div>
+
+      {/* Profile Card */}
+      <Card className="glass rounded-2xl border-border/50 overflow-hidden">
+        <div className="bg-gradient-to-r from-brand-blue/10 via-brand-orange/5 to-brand-gold/10">
+          <CardHeader className="border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-brand-orange/10 rounded-lg flex items-center justify-center">
+                <User className="h-5 w-5 text-brand-orange" />
+              </div>
+              <CardTitle className="text-foreground font-heading">Profile</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-16 w-16 rounded-2xl bg-brand-orange/20 border border-brand-orange/30 flex items-center justify-center">
+                <span className="text-2xl font-bold text-brand-orange">
+                  {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">{user?.name || 'User'}</h3>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {user?.emailVerified && (
+                    <Badge
+                      variant="outline"
+                      className="border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400 text-xs"
+                    >
+                      Verified
+                    </Badge>
+                  )}
+                  {user?.launchAccessGranted && (
+                    <Badge
+                      variant="outline"
+                      className="border-brand-orange/30 bg-brand-orange/10 text-brand-orange text-xs"
+                    >
+                      Early Access
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="text-xs capitalize">
+                    {user?.role?.toLowerCase() || 'user'}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-surface-elevated rounded-xl border border-border/30">
+              <span className="text-sm font-medium text-foreground">Name</span>
+              <span className="text-sm text-muted-foreground">{user?.name || '—'}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-surface-elevated rounded-xl border border-border/30">
+              <span className="text-sm font-medium text-foreground">Email</span>
+              <span className="text-sm text-muted-foreground">{user?.email || '—'}</span>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
 
       {/* Wallet Card */}
       <Card className="glass rounded-2xl border-border/50">
@@ -47,12 +117,59 @@ export default function SettingsPage() {
             </Badge>
           </div>
 
-          {address && (
-            <div className="flex items-center justify-between p-4 bg-surface-elevated rounded-xl border border-border/30">
-              <span className="text-sm font-medium text-foreground">Wallet Address</span>
-              <code className="rounded-lg bg-brand-orange/10 px-3 py-1.5 font-mono text-xs text-brand-orange">
-                {address.slice(0, 6)}...{address.slice(-4)}
-              </code>
+          {connected && address ? (
+            <>
+              <div className="flex items-center justify-between p-4 bg-surface-elevated rounded-xl border border-border/30">
+                <span className="text-sm font-medium text-foreground">Wallet Address</span>
+                <div className="flex items-center gap-2">
+                  <code className="rounded-lg bg-brand-orange/10 px-3 py-1.5 font-mono text-xs text-brand-orange">
+                    {address.slice(0, 6)}...{address.slice(-4)}
+                  </code>
+                  <button
+                    onClick={copyAddress}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <Button
+                onClick={disconnect}
+                variant="outline"
+                className="w-full gap-2 border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500"
+              >
+                <LogOut className="h-4 w-4" />
+                Disconnect Wallet
+              </Button>
+            </>
+          ) : (
+            <div className="text-center py-4 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Connect your Starknet wallet to enable DCA execution, accumulation savings, and BTC
+                purchases.
+              </p>
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <span>Supported:</span>
+                <Badge variant="outline" className="text-xs">
+                  Argent
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  Braavos
+                </Badge>
+              </div>
+              <Button
+                onClick={connect}
+                disabled={connecting}
+                className="w-full gap-2 bg-brand-orange hover:bg-brand-orange/90"
+              >
+                <Wallet className="h-4 w-4" />
+                {connecting ? 'Connecting...' : 'Connect Wallet'}
+              </Button>
             </div>
           )}
 

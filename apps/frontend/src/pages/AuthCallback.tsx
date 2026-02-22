@@ -50,7 +50,7 @@ export default function AuthCallback() {
           if (profile.role === 'ADMIN') {
             navigate('/admin');
           } else if (profile.launchAccessGranted) {
-            navigate('/dashboard');
+            navigate('/app/dashboard');
           } else {
             navigate('/waitlist');
           }

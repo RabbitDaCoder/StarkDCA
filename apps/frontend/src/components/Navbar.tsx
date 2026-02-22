@@ -1,4 +1,4 @@
-import { Wallet, ChevronDown, LogOut, User, ExternalLink, Menu } from 'lucide-react';
+import { ChevronDown, LogOut, User, Menu, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import starkDCALogo from '@/assets/starkDCA.png';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuthStore } from '@/store/auth.store';
 import { useWalletStore } from '@/store/wallet.store';
-import { shortenAddress } from '@/lib/utils';
+import { ThemeToggle } from '@/components/landing/ThemeToggle';
 
 export function Navbar() {
-  const { address, connected, connect, disconnect } = useWalletStore();
+  const { user, logout } = useAuthStore();
+  const { address, connected, connecting, connect } = useWalletStore();
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
       {/* Mobile logo & menu */}
       <div className="flex items-center gap-4 lg:hidden">
         <Button variant="ghost" size="icon" className="lg:hidden">
@@ -26,79 +28,95 @@ export function Navbar() {
         </Button>
         <div className="flex items-center gap-2">
           <img src={starkDCALogo} alt="StarkDCA" className="h-8 w-auto" />
-          <span className="font-heading font-bold text-brand-blue">StarkDCA</span>
+          <span className="font-heading font-bold text-foreground">StarkDCA</span>
         </div>
       </div>
 
       {/* Page context / breadcrumb */}
       <div className="hidden lg:block">
-        <h2 className="font-heading font-semibold text-brand-blue">Dashboard</h2>
+        <h2 className="font-heading font-semibold text-foreground">Dashboard</h2>
       </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+
+        {/* Wallet indicator */}
+        {connected && address ? (
+          <Badge
+            variant="outline"
+            className="hidden sm:inline-flex border-brand-orange/30 bg-brand-orange/10 text-brand-orange gap-1.5"
+          >
+            <Wallet className="h-3 w-3" />
+            {address.slice(0, 4)}...{address.slice(-3)}
+          </Badge>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={connect}
+            disabled={connecting}
+            className="hidden sm:inline-flex gap-1.5 text-xs text-muted-foreground hover:text-brand-orange"
+          >
+            <Wallet className="h-3.5 w-3.5" />
+            {connecting ? 'Connecting...' : 'Connect'}
+          </Button>
+        )}
+
         <Badge
           variant="outline"
-          className="hidden sm:inline-flex border-green-200 bg-green-50 text-green-700"
+          className="hidden sm:inline-flex border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400"
         >
           <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500 animate-pulse" />
           Sepolia
         </Badge>
 
-        {connected && address ? (
+        {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 font-mono text-xs border-brand-blue/20 hover:border-brand-orange hover:bg-brand-orange/5"
+                className="gap-2 text-sm border-border hover:border-primary hover:bg-primary/5"
               >
-                <Wallet className="h-4 w-4 text-brand-orange" />
-                {shortenAddress(address)}
+                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-xs font-bold text-primary">
+                    {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <span className="hidden sm:inline max-w-[120px] truncate text-foreground">
+                  {user.name || user.email || 'Account'}
+                </span>
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel className="font-mono text-xs font-normal text-muted-foreground">
-                {shortenAddress(address, 6)}
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                {user.email}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/dashboard/settings" className="cursor-pointer">
+                <Link to="/app/settings" className="cursor-pointer">
                   <User className="mr-2 h-4 w-4" />
                   Account Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a
-                  href={`https://sepolia.voyager.online/contract/${address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  View on Explorer
-                </a>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={disconnect}
+                onClick={() => logout()}
                 className="text-destructive cursor-pointer focus:bg-destructive/10"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Disconnect Wallet
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button
-            size="sm"
-            onClick={connect}
-            className="gap-2 bg-brand-orange hover:bg-brand-orange/90"
-          >
-            <Wallet className="h-4 w-4" />
-            Connect Wallet
-          </Button>
+          <Link to="/login">
+            <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90">
+              Sign In
+            </Button>
+          </Link>
         )}
       </div>
     </header>

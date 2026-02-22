@@ -19,6 +19,9 @@ export const sendEmailSchema = z.object({
     'launch',
     'custom',
     'password-reset',
+    'plan-activated',
+    'btc-accumulated',
+    'plan-cancelled',
   ]),
   to: z.string().email('Invalid email address'),
   name: z.string().min(1, 'Name is required').max(100),
@@ -27,6 +30,26 @@ export const sendEmailSchema = z.object({
   resetUrl: z.string().url().optional(),
   templateName: z.string().max(50).optional(),
   variables: z.record(z.string()).optional(),
+  planDetails: z
+    .object({
+      amount: z.string(),
+      interval: z.string(),
+      totalExecutions: z.number(),
+      totalDeposit: z.string(),
+      executionsCompleted: z.number().optional(),
+    })
+    .optional(),
+  executionDetails: z
+    .object({
+      amountIn: z.string(),
+      amountOut: z.string(),
+      price: z.string(),
+      executionNumber: z.number(),
+      totalExecutions: z.number(),
+      planInterval: z.string(),
+      txHash: z.string().optional(),
+    })
+    .optional(),
 });
 
 /**
