@@ -485,16 +485,31 @@ class AuthService {
 
     // Send password reset email
     const firstName = user.name?.split(' ')[0] || 'there';
-    emailService.sendPasswordResetEmail(user.email, firstName, resetUrl).catch((err) => {
-      logger.error({ error: err, email: user.email }, 'Failed to send password reset email');
-    });
+    let sent = false;
+    try {
+      sent = await emailService.sendPasswordResetEmail(user.email, firstName, resetUrl);
+      if (!sent) {
+        logger.error(
+          { userId: user.id, email: user.email },
+          'Password reset email send returned false — email was NOT delivered',
+        );
+      } else {
+        logger.info(
+          { userId: user.id, email: user.email },
+          'Password reset email sent successfully',
+        );
+      }
+    } catch (err) {
+      logger.error(
+        { error: err, email: user.email },
+        'Failed to send password reset email — exception thrown',
+      );
+    }
 
     // In dev, log the token
     if (!config.isProduction) {
       logger.info({ userId: user.id, email, token, resetUrl }, '🔑 [DEV] Password reset token');
     }
-
-    logger.info({ userId: user.id, email }, 'Password reset email sent');
 
     return { sent: true };
   }

@@ -29,6 +29,10 @@ class NodeMailerProvider implements EmailProvider {
         user: config.smtp.user,
         pass: config.smtp.pass,
       },
+      // Use IPv6 if available (some networks block IPv4 SMTP)
+      tls: { rejectUnauthorized: false },
+      connectionTimeout: 10000,
+      socketTimeout: 10000,
     });
     this.lastConfig = configKey;
     return this.transporter;
