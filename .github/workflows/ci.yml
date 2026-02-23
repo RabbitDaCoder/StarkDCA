@@ -95,6 +95,8 @@ jobs:
       GOOGLE_CALLBACK_URL: http://localhost:4000/api/v1/auth/google/callback
       BCRYPT_ROUNDS: '4'
       NODE_ENV: test
+      EMAIL_SERVICE_URL: http://localhost:3001
+      EMAIL_SERVICE_API_KEY: test-email-service-api-key-ci
 
     steps:
       - uses: actions/checkout@v4

@@ -36,6 +36,7 @@ jest.mock('../../../config', () => ({
     cache: { lockTtl: 30, priceTtl: 60, planTtl: 30, idempotencyTtl: 86400 },
     price: { apiUrl: 'https://api.coingecko.com/api/v3', apiKey: '', cacheTtl: 60 },
     starknet: { rpcUrl: '', contractAddress: '', executorPrivateKey: '', executorAddress: '' },
+    emailService: { url: 'http://localhost:3001', apiKey: 'test-email-key-placeholder' },
     isProduction: false,
     nodeEnv: 'test',
   },
@@ -49,6 +50,16 @@ jest.mock('../../../infrastructure/logger', () => ({
     error: jest.fn(),
     debug: jest.fn(),
     fatal: jest.fn(),
+  },
+}));
+
+// Mock email service
+jest.mock('../../../infrastructure/email', () => ({
+  emailService: {
+    sendPlanActivatedEmail: jest.fn().mockResolvedValue(undefined),
+    sendBtcAccumulatedEmail: jest.fn().mockResolvedValue(undefined),
+    sendPlanCancelledEmail: jest.fn().mockResolvedValue(undefined),
+    sendPlanCompletedEmail: jest.fn().mockResolvedValue(undefined),
   },
 }));
 

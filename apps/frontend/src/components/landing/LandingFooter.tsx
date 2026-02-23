@@ -14,8 +14,8 @@ const companyLinks = [
 ];
 
 const socialLinks = [
-  { label: 'Twitter / X', href: 'https://x.com/DcaStark23076', icon: Twitter },
-  { label: 'GitHub', href: '#', icon: Github },
+  { label: 'Twitter / X', href: 'https://x.com/StarkDCA_', icon: Twitter },
+  { label: 'GitHub', href: 'https://github.com/RabbitDaCoder/StarkDCA', icon: Github },
   {
     label: 'Discord',
     href: '#',
@@ -97,10 +97,10 @@ export default function LandingFooter() {
               Contact
             </h4>
             <a
-              href="mailto:Starkdca@gmail.com"
+              href="mailto:support@starkdca.xyz"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Starkdca@gmail.com
+              support@starkdca.xyz
             </a>
           </div>
         </div>

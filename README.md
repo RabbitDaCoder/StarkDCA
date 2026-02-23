@@ -8,8 +8,10 @@
 </p>
 
 <p align="center">
-  <a href="https://x.com/DcaStark23076"><img src="https://img.shields.io/badge/𝕏-@DcaStark23076-000?style=flat-square&logo=x" alt="X / Twitter" /></a>
-  <a href="mailto:Starkdca@gmail.com"><img src="https://img.shields.io/badge/Email-Starkdca%40gmail.com-EA4335?style=flat-square&logo=gmail&logoColor=white" alt="Email" /></a>
+  <a href="https://www.starkdca.xyz"><img src="https://img.shields.io/badge/Website-starkdca.xyz-FE6606?style=flat-square" alt="Website" /></a>
+  <a href="https://x.com/StarkDCA_"><img src="https://img.shields.io/badge/𝕏-@StarkDCA__-000?style=flat-square&logo=x" alt="X / Twitter" /></a>
+  <a href="https://github.com/RabbitDaCoder/StarkDCA"><img src="https://img.shields.io/badge/GitHub-StarkDCA-181717?style=flat-square&logo=github" alt="GitHub" /></a>
+  <a href="mailto:support@starkdca.xyz"><img src="https://img.shields.io/badge/Email-support%40starkdca.xyz-EA4335?style=flat-square&logo=gmail&logoColor=white" alt="Email" /></a>
   <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License" />
   <img src="https://img.shields.io/badge/Starknet-Mainnet%20%2F%20Sepolia-8B5CF6?style=flat-square" alt="Starknet" />
 </p>
@@ -203,20 +205,32 @@ Tests cover: plan creation, execution, completion, cancellation, and authorizati
 | `DATABASE_URL`          | PostgreSQL connection string         |
 | `REDIS_URL`             | Redis connection string              |
 | `JWT_SECRET`            | Secret key for JWT tokens            |
+| `JWT_ACCESS_SECRET`     | JWT access token secret (min 32 ch)  |
+| `JWT_REFRESH_SECRET`    | JWT refresh token secret (min 32 ch) |
 | `STARKNET_RPC_URL`      | Starknet RPC endpoint                |
 | `DCA_CONTRACT_ADDRESS`  | Deployed DCA contract address        |
 | `EXECUTOR_PRIVATE_KEY`  | Private key for the executor account |
 | `EXECUTOR_ADDRESS`      | Executor account address             |
 | `EMAIL_SERVICE_URL`     | Vercel email-endpoint URL            |
 | `EMAIL_SERVICE_API_KEY` | Shared secret with email service     |
+| `CORS_ORIGIN`           | Allowed frontend origin for CORS     |
+| `FRONTEND_URL`          | Frontend URL (used in emails)        |
+| `GOOGLE_CLIENT_ID`      | Google OAuth client ID               |
+| `GOOGLE_CLIENT_SECRET`  | Google OAuth client secret           |
+| `BCRYPT_ROUNDS`         | Password hashing rounds (default 12) |
+| `ENABLE_CRON`           | Enable in-process cron (`true`/`false`) |
 
 ### Frontend (`apps/frontend/.env`)
 
 | Variable                    | Description                              |
 | --------------------------- | ---------------------------------------- |
-| `VITE_API_URL`              | Backend API base URL                     |
+| `VITE_API_URL`              | Backend API base URL (include `/v1`) |
 | `VITE_STARKNET_CHAIN_ID`    | Target chain (`SN_SEPOLIA` or `SN_MAIN`) |
 | `VITE_DCA_CONTRACT_ADDRESS` | DCA contract address for direct reads    |
+| `VITE_DCA_ENGINE_ADDRESS`   | DCA engine contract address              |
+| `VITE_USDT_TOKEN_ADDRESS`   | USDT token contract address              |
+| `VITE_MBTC_TOKEN_ADDRESS`   | mBTC token contract address              |
+| `VITE_STARKNET_RPC_URL`     | Starknet JSON-RPC endpoint               |
 
 ---
 
@@ -280,8 +294,10 @@ npm run build:frontend
 
 ## Contact
 
-- **Email:** [Starkdca@gmail.com](mailto:Starkdca@gmail.com)
-- **X / Twitter:** [@DcaStark23076](https://x.com/DcaStark23076)
+- **Website:** [www.starkdca.xyz](https://www.starkdca.xyz)
+- **Support:** [support@starkdca.xyz](mailto:support@starkdca.xyz)
+- **X / Twitter:** [@StarkDCA_](https://x.com/StarkDCA_)
+- **GitHub:** [RabbitDaCoder/StarkDCA](https://github.com/RabbitDaCoder/StarkDCA)
 
 ---
 

@@ -142,6 +142,14 @@ class AuthController {
     try {
       const refreshToken = req.cookies?.refresh_token || req.body.refreshToken;
 
+      if (!refreshToken) {
+        res.status(401).json({
+          success: false,
+          error: { code: 'MISSING_REFRESH_TOKEN', message: 'Refresh token is required' },
+        });
+        return;
+      }
+
       const { accessToken, refreshToken: newRefreshToken } =
         await authService.refreshAccessToken(refreshToken);
 
@@ -165,7 +173,7 @@ class AuthController {
         await authService.logout(refreshToken);
       }
 
-      res.clearCookie('refresh_token', { path: '/api/v1/auth' });
+      res.clearCookie('refresh_token', { path: '/' });
       res.json(successResponse({ message: 'Logged out successfully' }));
     } catch (error) {
       next(error);
@@ -276,9 +284,9 @@ class AuthController {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: config.isProduction,
-      sameSite: 'strict',
+      sameSite: config.isProduction ? 'none' : 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/v1/auth',
+      path: '/',
     });
   }
 }

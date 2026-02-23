@@ -1,6 +1,23 @@
 // ─── Email Templates ─────────────────────────────────────────────────
 // All HTML email templates for StarkDCA, migrated from the backend.
 
+/** Shared social-links + contact footer for all email templates */
+function emailFooter(): string {
+  return `
+    <div style="text-align: center; margin-top: 20px; padding-top: 15px;">
+      <p style="margin: 0 0 8px 0;">
+        <a href="https://x.com/StarkDCA_" style="color: #1F3878; text-decoration: none; font-size: 13px; margin: 0 6px;">𝕏 Twitter</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/RabbitDaCoder/StarkDCA" style="color: #1F3878; text-decoration: none; font-size: 13px; margin: 0 6px;">GitHub</a>
+      </p>
+      <p style="color: #aaa; font-size: 12px; margin: 4px 0 0 0;">
+        <a href="https://www.starkdca.xyz" style="color: #1F3878; text-decoration: none;">www.starkdca.xyz</a>
+        &nbsp;·&nbsp;
+        <a href="mailto:support@starkdca.xyz" style="color: #888; text-decoration: none;">support@starkdca.xyz</a>
+      </p>
+    </div>`;
+}
+
 export function getOtpEmailTemplate(name: string, otp: string): { html: string; text: string } {
   const html = `
 <!DOCTYPE html>
@@ -36,6 +53,7 @@ export function getOtpEmailTemplate(name: string, otp: string): { html: string; 
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
       – The StarkDCA Team
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -77,13 +95,14 @@ export function getWaitlistWelcomeTemplate(name: string): { html: string; text: 
     <p>We'll notify you as soon as we launch. In the meantime, follow us on Twitter for updates!</p>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://x.com/DcaStark23076" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Follow @DcaStark23076</a>
+      <a href="https://x.com/StarkDCA_" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Follow @StarkDCA_</a>
     </div>
     
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
       – The StarkDCA Team<br>
       <em>Building the future of Bitcoin investment on Starknet</em>
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -132,6 +151,7 @@ export function getSignupWelcomeTemplate(
       – The StarkDCA Team<br>
       <em>Stack sats. Stay sovereign.</em>
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -195,13 +215,14 @@ export function getWaitlistConfirmationTemplate(
     <p>In the meantime, follow us on Twitter for the latest updates!</p>
 
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://x.com/DcaStark23076" style="background: #1F3878; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; font-family: 'Poppins', sans-serif;">Follow @DcaStark23076</a>
+      <a href="https://x.com/StarkDCA_" style="background: #1F3878; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; font-family: 'Poppins', sans-serif;">Follow @StarkDCA_</a>
     </div>
 
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
       – The StarkDCA Team<br>
       <em>Building the future of Bitcoin investment on Starknet</em>
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -252,6 +273,7 @@ export function getPasswordResetTemplate(
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
       – The StarkDCA Team
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -305,6 +327,7 @@ export function getLaunchEmailTemplate(
       – The StarkDCA Team<br>
       <em>Stack sats. Stay sovereign.</em>
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -376,6 +399,7 @@ export function getPlanActivatedTemplate(
       – The StarkDCA Team<br>
       <em>Stack sats. Stay sovereign.</em>
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -462,6 +486,7 @@ export function getBtcAccumulatedTemplate(
       – The StarkDCA Team<br>
       <em>Stack sats. Stay sovereign.</em>
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -528,6 +553,7 @@ export function getPlanCancelledTemplate(
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
       – The StarkDCA Team
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`;
@@ -560,6 +586,7 @@ export function getCustomTemplate(
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
       – The StarkDCA Team
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`,
@@ -584,6 +611,7 @@ export function getCustomTemplate(
     <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
       – The StarkDCA Team
     </p>
+    ${emailFooter()}
   </div>
 </body>
 </html>`,
