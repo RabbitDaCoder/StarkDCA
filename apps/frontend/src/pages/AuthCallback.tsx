@@ -16,6 +16,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       const token = searchParams.get('token');
+      const refreshTokenParam = searchParams.get('refreshToken');
       const userId = searchParams.get('userId');
       const error = searchParams.get('error');
 
@@ -28,7 +29,7 @@ export default function AuthCallback() {
         try {
           // Temporarily set token so API calls work
           const tempUser = { id: userId, name: null, email: null, role: 'USER' };
-          setAuth(tempUser, token);
+          setAuth(tempUser, token, refreshTokenParam);
 
           // Get full user profile (includes launchAccessGranted)
           const profile = await authApi.getProfile();
@@ -44,6 +45,7 @@ export default function AuthCallback() {
               waitlistPosition: profile.waitlistPosition,
             },
             token,
+            refreshTokenParam,
           );
 
           // Redirect based on launch access

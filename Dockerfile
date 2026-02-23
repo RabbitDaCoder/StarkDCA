@@ -75,5 +75,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 # Use tini as PID 1 for proper signal forwarding
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Default: web server. Migrations run automatically on startup.
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma && node apps/backend/dist/server.js"]
+# Default: web server. Migrations + admin seed run automatically on startup.
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma && node apps/backend/prisma/seed-admin.js && node apps/backend/dist/server.js"]

@@ -26,12 +26,13 @@ class AuthController {
     try {
       const result = await authService.signup(req.body);
 
-      // Set refresh token in HTTP-only cookie
+      // Set refresh token in HTTP-only cookie (same-origin fallback)
       this.setRefreshTokenCookie(res, result.refreshToken);
 
       res.status(201).json(
         successResponse({
           accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
           user: {
             id: result.userId,
             name: result.name,
@@ -62,6 +63,7 @@ class AuthController {
       res.json(
         successResponse({
           accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
           user: {
             id: result.userId,
             name: result.name,
@@ -95,9 +97,10 @@ class AuthController {
 
       this.setRefreshTokenCookie(res, result.refreshToken);
 
-      // Redirect to frontend with token in URL (for SPA handling)
+      // Redirect to frontend with tokens in URL (for SPA handling)
       const redirectUrl = new URL(`${config.frontend.url}/auth/callback`);
       redirectUrl.searchParams.set('token', result.accessToken);
+      redirectUrl.searchParams.set('refreshToken', result.refreshToken);
       redirectUrl.searchParams.set('userId', result.userId);
 
       res.redirect(redirectUrl.toString());
@@ -125,6 +128,7 @@ class AuthController {
       res.status(200).json(
         successResponse({
           accessToken,
+          refreshToken,
           userId,
           starknetAddress,
         }),
@@ -155,7 +159,7 @@ class AuthController {
 
       this.setRefreshTokenCookie(res, newRefreshToken);
 
-      res.json(successResponse({ accessToken }));
+      res.json(successResponse({ accessToken, refreshToken: newRefreshToken }));
     } catch (error) {
       next(error);
     }

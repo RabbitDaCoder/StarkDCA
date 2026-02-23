@@ -47,20 +47,36 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Try to refresh token
+        // Read refresh token from persisted auth store
+        const authStorage = localStorage.getItem('auth-storage');
+        let storedRefreshToken: string | null = null;
+        if (authStorage) {
+          try {
+            const { state } = JSON.parse(authStorage);
+            storedRefreshToken = state?.refreshToken ?? null;
+          } catch {
+            // ignore
+          }
+        }
+
+        // Try to refresh token – send refreshToken in body (cross-origin safe)
         const response = await axios.post(
           `${apiClient.defaults.baseURL}/auth/refresh`,
-          {},
+          { refreshToken: storedRefreshToken },
           { withCredentials: true },
         );
 
         const newToken = response.data?.data?.accessToken;
+        const newRefreshToken = response.data?.data?.refreshToken;
         if (newToken) {
-          // Update stored token
+          // Update stored tokens
           const authStorage = localStorage.getItem('auth-storage');
           if (authStorage) {
             const parsed = JSON.parse(authStorage);
             parsed.state.accessToken = newToken;
+            if (newRefreshToken) {
+              parsed.state.refreshToken = newRefreshToken;
+            }
             localStorage.setItem('auth-storage', JSON.stringify(parsed));
           }
 

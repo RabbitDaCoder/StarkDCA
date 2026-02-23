@@ -37,24 +37,20 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        sync: false # Set to your Vercel frontend URL
+        sync: false # e.g. https://www.starkdca.xyz,https://starkdca.xyz
       - key: FRONTEND_URL
-        sync: false
+        sync: false # e.g. https://www.starkdca.xyz
       - key: STARKNET_RPC_URL
         sync: false
       - key: DCA_CONTRACT_ADDRESS
         sync: false
       - key: EXECUTOR_PRIVATE_KEY
         sync: false
-      - key: SMTP_HOST
+      - key: EXECUTOR_ADDRESS
         sync: false
-      - key: SMTP_PORT
+      - key: EMAIL_SERVICE_URL
         sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
+      - key: EMAIL_SERVICE_API_KEY
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
@@ -70,7 +66,7 @@ services:
         - packages/shared-types/**
         - Dockerfile
         - package.json
-    preDeployCommand: 'npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma'
+    preDeployCommand: 'npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma && node apps/backend/prisma/seed-admin.js'
 
   # ─── Worker Service (DCA Cron Executor) ─────────────────────────────
   - type: worker
@@ -98,15 +94,11 @@ services:
         sync: false
       - key: EXECUTOR_PRIVATE_KEY
         sync: false
-      - key: SMTP_HOST
+      - key: EXECUTOR_ADDRESS
         sync: false
-      - key: SMTP_PORT
+      - key: EMAIL_SERVICE_URL
         sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
+      - key: EMAIL_SERVICE_API_KEY
         sync: false
       # Worker needs JWT secrets for config validation
       - key: JWT_ACCESS_SECRET

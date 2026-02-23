@@ -38,7 +38,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60_000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
 
-  // CORS
+  // CORS (comma-separated for multiple origins, e.g. https://www.starkdca.xyz,https://starkdca.xyz)
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
 
   // Redis TTLs (seconds)
@@ -125,7 +125,9 @@ export const config = {
   },
 
   cors: {
-    origin: env.CORS_ORIGIN,
+    origin: env.CORS_ORIGIN.includes(',')
+      ? env.CORS_ORIGIN.split(',').map((o) => o.trim())
+      : env.CORS_ORIGIN,
   },
 
   cache: {

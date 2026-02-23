@@ -3,8 +3,23 @@
 
 import { apiClient, unwrap } from './client';
 
+/** Read refreshToken from persisted Zustand auth store in localStorage */
+function getStoredRefreshToken(): string | null {
+  try {
+    const raw = localStorage.getItem('auth-storage');
+    if (raw) {
+      const { state } = JSON.parse(raw);
+      return state?.refreshToken ?? null;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 interface AuthResponse {
   accessToken: string;
+  refreshToken: string;
   user: {
     id: string;
     name: string | null;
@@ -15,6 +30,7 @@ interface AuthResponse {
 
 interface RefreshResponse {
   accessToken: string;
+  refreshToken: string;
 }
 
 interface UserProfile {
@@ -46,11 +62,13 @@ export const authApi = {
   },
 
   async logout(): Promise<void> {
-    await apiClient.post('/auth/logout');
+    const refreshToken = getStoredRefreshToken();
+    await apiClient.post('/auth/logout', { refreshToken });
   },
 
   async refresh(): Promise<RefreshResponse> {
-    const response = await apiClient.post('/auth/refresh');
+    const refreshToken = getStoredRefreshToken();
+    const response = await apiClient.post('/auth/refresh', { refreshToken });
     return unwrap(response);
   },
 

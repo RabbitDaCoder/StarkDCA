@@ -18,6 +18,7 @@ interface User {
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -26,7 +27,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  setAuth: (user: User, accessToken: string) => void;
+  setAuth: (user: User, accessToken: string, refreshToken?: string | null) => void;
   updateUser: (updates: Partial<User>) => void;
   clearError: () => void;
   refreshToken: () => Promise<void>;
@@ -38,6 +39,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -49,6 +51,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             user: response.user,
             accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
             isAuthenticated: true,
             isLoading: false,
           });
@@ -68,6 +71,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             user: response.user,
             accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
             isAuthenticated: true,
             isLoading: false,
           });
@@ -89,14 +93,16 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: null,
           accessToken: null,
+          refreshToken: null,
           isAuthenticated: false,
         });
       },
 
-      setAuth: (user: User, accessToken: string) => {
+      setAuth: (user: User, accessToken: string, refreshToken?: string | null) => {
         set({
           user,
           accessToken,
+          refreshToken: refreshToken ?? get().refreshToken,
           isAuthenticated: true,
         });
       },
@@ -115,7 +121,7 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: async () => {
         try {
           const response = await authApi.refresh();
-          set({ accessToken: response.accessToken });
+          set({ accessToken: response.accessToken, refreshToken: response.refreshToken });
         } catch (error) {
           // Token refresh failed, logout
           get().logout();
@@ -146,6 +152,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
     },
