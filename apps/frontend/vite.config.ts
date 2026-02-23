@@ -12,6 +12,8 @@ export default defineConfig({
         '../../packages/shared-types/src/index.ts',
       ),
       ws: path.resolve(__dirname, './src/lib/ws-shim.ts'),
+      // Force starknet v8 for frontend (backend uses v6 at root)
+      starknet: path.resolve(__dirname, './node_modules/starknet'),
     },
   },
   optimizeDeps: {

@@ -2,14 +2,20 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
-import { useWalletStore } from '@/store/wallet.store';
+import { useStarknetConnect, truncateAddress } from '@/hooks';
 import { Wallet, Globe, Shield, Bell, User, Copy, Check, LogOut, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
-  const { address, connected, connecting, connect, disconnect } = useWalletStore();
+  const {
+    address,
+    isConnected: connected,
+    isConnecting: connecting,
+    connect,
+    disconnect,
+  } = useStarknetConnect();
   const [copied, setCopied] = useState(false);
 
   const copyAddress = () => {

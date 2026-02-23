@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/store/auth.store';
-import { useWalletStore } from '@/store/wallet.store';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { ThemeToggle } from '@/components/landing/ThemeToggle';
 
 interface NavbarProps {
@@ -21,7 +21,6 @@ interface NavbarProps {
 
 export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuthStore();
-  const { address, connected, connecting, connect } = useWalletStore();
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 sm:px-6">
@@ -46,27 +45,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       <div className="flex items-center gap-3">
         <ThemeToggle />
 
-        {/* Wallet indicator */}
-        {connected && address ? (
-          <Badge
-            variant="outline"
-            className="hidden sm:inline-flex border-brand-orange/30 bg-brand-orange/10 text-brand-orange gap-1.5"
-          >
-            <Wallet className="h-3 w-3" />
-            {address.slice(0, 4)}...{address.slice(-3)}
-          </Badge>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={connect}
-            disabled={connecting}
-            className="hidden sm:inline-flex gap-1.5 text-xs text-muted-foreground hover:text-brand-orange"
-          >
-            <Wallet className="h-3.5 w-3.5" />
-            {connecting ? 'Connecting...' : 'Connect'}
-          </Button>
-        )}
+        {/* Wallet indicator — powered by starknet-react */}
+        <div className="hidden sm:block">
+          <ConnectWalletButton compact />
+        </div>
 
         <Badge
           variant="outline"

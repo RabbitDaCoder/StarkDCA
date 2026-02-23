@@ -27,9 +27,11 @@ export function shortenAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
 
-export function timeUntil(timestamp: number): string {
+export function timeUntil(timestamp: number | string): string {
   const now = Date.now();
-  const diff = timestamp - now;
+  const target = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+  if (isNaN(target)) return '—';
+  const diff = target - now;
   if (diff <= 0) return 'Now';
 
   const hours = Math.floor(diff / 3_600_000);

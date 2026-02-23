@@ -28,6 +28,12 @@ apiClient.interceptors.request.use((config) => {
   if (address) {
     config.headers['x-starknet-address'] = address;
   }
+
+  // Auto-generate Idempotency-Key for POST requests
+  if (config.method === 'post' && !config.headers['Idempotency-Key']) {
+    config.headers['Idempotency-Key'] = crypto.randomUUID();
+  }
+
   return config;
 });
 
@@ -43,7 +49,7 @@ apiClient.interceptors.response.use(
       try {
         // Try to refresh token
         const response = await axios.post(
-          `${apiClient.defaults.baseURL}/v1/auth/refresh`,
+          `${apiClient.defaults.baseURL}/auth/refresh`,
           {},
           { withCredentials: true },
         );

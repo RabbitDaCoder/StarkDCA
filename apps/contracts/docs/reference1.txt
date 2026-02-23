@@ -1,0 +1,820 @@
+Financial Smart Contract Security & Architecture Rules
+For Cairo Contracts on StarkNet
+
+This project handles value.
+No undefined behavior.
+No silent failures.
+No “should be fine”.
+
+Everything must be deterministic, provable, and explicit.
+
+1️⃣ Core Architectural Principles (From Cairo Design)
+1.1 Deterministic Execution Only
+
+Cairo programs execute with a deterministic memory model.
+Never rely on:
+
+Implicit state
+
+Ordering assumptions
+
+External mutable side effects
+
+All state transitions must be explicit.
+
+1.2 Explicit State Machine Design
+
+Design the contract as a finite state machine.
+
+Example:
+
+Initialized
+
+Active
+
+Paused
+
+Closed
+
+Never allow implicit transitions.
+
+Always:
+
+assert(self.status == Status::Active, 'CONTRACT_NOT_ACTIVE');
+
+No soft checks. Fail fast.
+
+1.3 Storage Discipline (Critical in StarkNet)
+
+From StarkNet architecture:
+
+Storage writes are expensive.
+
+Every storage slot is persistent.
+
+Layout must be predictable.
+
+Rules:
+
+Group related values into structs.
+
+Avoid scattered storage writes.
+
+Never overwrite before validation.
+
+Validate first → mutate last.
+
+Bad:
+
+self.balance.write(new_balance);
+assert(condition);
+
+Correct:
+
+assert(condition);
+self.balance.write(new_balance);
+2️⃣ Security Rules (Non-Negotiable)
+2.1 Input Validation Layer
+
+Every public function must validate:
+
+Caller identity
+
+Amount > 0
+
+Balance sufficiency
+
+No overflow / underflow
+
+Valid state
+
+Non-zero addresses
+
+Correct contract status
+
+Never trust calldata.
+
+Example:
+
+let caller = get_caller_address();
+assert(caller != 0, 'INVALID_CALLER');
+assert(amount > 0, 'ZERO_AMOUNT');
+assert(self.balances.read(caller) >= amount, 'INSUFFICIENT_BALANCE');
+2.2 Reentrancy Safety
+
+Even though StarkNet differs from EVM, external calls still introduce risk.
+
+Rules:
+
+Update state BEFORE external call.
+
+Minimize external calls.
+
+Prefer pull-over-push payment models.
+
+Correct order:
+
+Validate
+
+Update internal state
+
+Emit event
+
+Perform external call (if unavoidable)
+
+Never reverse that.
+
+2.3 Overflow / Underflow Protection
+
+Cairo felt arithmetic wraps unless handled carefully.
+
+Rules:
+
+Use checked arithmetic where possible.
+
+Explicitly assert bounds before arithmetic.
+
+Never rely on “it won’t overflow”.
+
+Example:
+
+assert(a <= MAX_SUPPLY - b, 'OVERFLOW');
+let result = a + b;
+2.4 No Hidden Assumptions
+
+Document:
+
+Units (wei, token decimals, fixed point format)
+
+Rounding behavior
+
+Fee calculations
+
+Time-based logic assumptions
+
+Never assume developers “just know”.
+
+3️⃣ Financial Logic Rules
+
+This is where most contracts die.
+
+3.1 Order of Operations
+
+For any transfer:
+
+Validate
+
+Calculate
+
+Assert calculated correctness
+
+Update storage
+
+Emit event
+
+Never mutate before computing everything.
+
+3.2 No Floating Logic
+
+Cairo has no floating points.
+
+All financial math must:
+
+Use fixed-point scaling (e.g., 1e18)
+
+Clearly define precision
+
+Avoid division before multiplication
+
+Bad:
+
+let result = amount / rate * multiplier;
+
+Correct:
+
+let result = amount * multiplier / rate;
+
+Document rounding direction.
+
+3.3 Zero Handling
+
+Always explicitly handle:
+
+amount == 0
+
+user balance == 0
+
+empty mapping entry
+
+first-time user
+
+Zero is not neutral in finance. It is a state.
+
+4️⃣ Event Emission Rules
+
+Every financial action must emit:
+
+Caller
+
+Amount
+
+Timestamp (if relevant)
+
+Updated balance (optional but helpful)
+
+Events are your audit trail.
+
+If it moves value, it emits an event.
+
+No exceptions.
+
+5️⃣ Testing Requirements (Strict)
+
+Copilot must always generate:
+
+5.1 Unit Tests
+
+Happy path
+
+Multiple sequential calls
+
+Single user
+
+Multiple users
+
+5.2 Failure Tests
+
+Zero input
+
+Unauthorized caller
+
+Insufficient balance
+
+Invalid state
+
+Overflow attempt
+
+5.3 Edge Cases
+
+Max uint values
+
+Very small values
+
+Rapid repeated calls
+
+Boundary transitions
+
+5.4 Fuzz-Style Tests
+
+Random amounts
+
+Random user ordering
+
+Random sequence of deposits/withdrawals
+
+If logic involves money, coverage must be exhaustive.
+
+6️⃣ Deployment Discipline
+
+Rules:
+
+Deploy to StarkNet testnet first.
+
+Simulate high-load behavior.
+
+Verify events.
+
+Verify storage integrity after stress testing.
+
+Never deploy to mainnet without:
+
+100% logic coverage
+
+Independent manual review
+
+Event verification
+
+7️⃣ Code Structure Best Practices
+7.1 Clear Module Separation
+
+Structure:
+
+/src
+  ├─ storage.cairo
+  ├─ validation.cairo
+  ├─ math.cairo
+  ├─ events.cairo
+  ├─ main_contract.cairo
+/tests
+
+Separation prevents logic mixing.
+
+7.2 No Magic Numbers
+
+Define:
+
+const MAX_SUPPLY: felt252 = ...;
+const PRECISION: felt252 = 1_000_000_000_000_000_000;
+
+Never hardcode numbers in financial logic.
+
+7.3 Fail Fast Philosophy
+
+If something is wrong:
+
+Assert immediately.
+
+Don’t recover silently.
+
+Don’t auto-correct invalid input.
+
+Financial contracts must break loudly.
+
+8️⃣ Defensive Programming Checklist
+
+Before every commit:
+
+Are all external calls minimized?
+
+Are all state writes validated?
+
+Are events emitted?
+
+Are balances validated?
+
+Are edge cases tested?
+
+Is precision documented?
+
+Is overflow handled?
+
+Are state transitions explicit?
+
+If any answer is “maybe”, rewrite it.
+
+9️⃣ Copilot Behavior Rules
+
+Copilot must:
+
+Prefer explicit asserts
+
+Refuse clever optimizations that reduce clarity
+
+Suggest test cases automatically
+
+Never suggest mainnet deployment
+
+Default to defensive code
+
+Always comment financial math
+
+10️⃣ Mindset Rule
+
+This is not a frontend.
+This is not a prototype.
+
+This is programmable money.
+
+Money contracts must be:
+
+Boring
+
+Predictable
+
+Explicit
+
+Auditable
+
+Deterministic
+
+Simple beats smart.
+Clear beats clever.
+Secure beats fast.
+
+
+Cairo + StarkNet Secure Development Standard
+Project Overview
+
+This project is a financial smart contract built in Cairo for StarkNet.
+
+The contract handles user funds and must be written with:
+
+Maximum security
+
+Deterministic behavior
+
+Explicit state transitions
+
+Defensive programming
+
+Clear validation logic
+
+Full test coverage
+
+This is production-grade financial software.
+No experimental shortcuts. No clever hacks.
+
+1. Core Philosophy
+1.1 Deterministic Execution
+
+All logic must be:
+
+Predictable
+
+Explicit
+
+State-driven
+
+Free of hidden assumptions
+
+Never rely on:
+
+Implicit behavior
+
+Unverified external state
+
+Assumed ordering
+
+Default zero states without validation
+
+All transitions must be explicit and validated.
+
+1.2 Fail Fast Rule
+
+If something is invalid:
+
+Assert immediately
+
+Do not continue execution
+
+Do not silently fix input
+
+Do not auto-correct user mistakes
+
+Financial contracts must break loudly, not quietly.
+
+1.3 Security First
+
+Security takes priority over:
+
+Gas optimization
+
+Clever logic
+
+Code brevity
+
+Developer convenience
+
+Readable, auditable logic beats compact code.
+
+2. State Machine Architecture
+
+The contract must behave as a finite state machine.
+
+Example states:
+
+Uninitialized
+
+Active
+
+Paused
+
+Closed
+
+Every public function must verify:
+
+Contract state
+
+Caller permissions
+
+Valid transition path
+
+Never allow implicit transitions.
+
+3. Storage Design Rules
+3.1 Structured Storage Layout
+
+Group related fields into structs
+
+Avoid scattered storage writes
+
+Keep mappings predictable
+
+Document layout assumptions
+
+3.2 Write Discipline
+
+Always:
+
+Validate
+
+Compute
+
+Assert correctness
+
+Update storage
+
+Never mutate state before validation.
+
+4. Input Validation Rules
+
+Every public function must validate:
+
+Caller address is valid
+
+Amount > 0
+
+Balance sufficiency
+
+No overflow / underflow
+
+Valid contract state
+
+Non-zero token addresses
+
+Correct user state
+
+Never assume calldata is valid.
+
+5. Financial Math Rules
+5.1 No Floating Point
+
+All financial calculations must use:
+
+Fixed-point scaling (e.g., 1e18 precision)
+
+Clearly documented precision constants
+
+Define constants for:
+
+Precision
+
+Fees
+
+Limits
+
+Maximum values
+
+Never hardcode numeric values in logic.
+
+5.2 Safe Arithmetic
+
+Before any addition or multiplication:
+
+Check for overflow
+
+Assert bounds explicitly
+
+Validate subtraction does not underflow
+
+Never assume arithmetic is safe.
+
+5.3 Order of Operations
+
+Always multiply before dividing.
+
+Always document rounding direction.
+
+Never perform division before scaling.
+
+6. External Calls & Reentrancy Safety
+
+Rules:
+
+Minimize external calls
+
+Update internal state before calling external contracts
+
+Prefer pull-over-push payment patterns
+
+Avoid nested external calls
+
+Correct order:
+
+Validate
+
+Update internal state
+
+Emit event
+
+Perform external interaction
+
+7. Event Emission Rules
+
+Every financial action must emit an event.
+
+Events must include:
+
+Caller
+
+Amount
+
+Relevant identifier
+
+Timestamp (if applicable)
+
+Resulting balance (if useful)
+
+Events are the audit trail.
+
+If value moves, emit an event.
+
+8. Testing Requirements
+
+Every contract must include:
+
+8.1 Unit Tests
+
+Happy path
+
+Multiple users
+
+Sequential operations
+
+Correct balance updates
+
+8.2 Failure Tests
+
+Zero amount
+
+Invalid caller
+
+Insufficient balance
+
+Invalid state
+
+Overflow attempt
+
+Unauthorized access
+
+8.3 Edge Case Tests
+
+Maximum values
+
+Boundary conditions
+
+Rapid repeated calls
+
+First-time user cases
+
+Zero-balance users
+
+8.4 Fuzz-Style Tests
+
+Random amounts
+
+Random execution ordering
+
+Random multi-user interactions
+
+No deployment without complete test coverage.
+
+9. Deployment Discipline
+
+Mandatory process:
+
+Deploy to StarkNet testnet
+
+Simulate stress conditions
+
+Verify storage consistency
+
+Verify emitted events
+
+Review failure cases
+
+Never deploy to mainnet without:
+
+Full test coverage
+
+Manual review
+
+Logical audit
+
+Event validation
+
+10. Code Style Rules
+
+Use explicit variable names
+
+Avoid abbreviations in financial logic
+
+No magic numbers
+
+Comment all financial formulas
+
+Document assumptions clearly
+
+Separate validation, math, storage, and events into modules
+
+Example structure:
+
+/src
+  storage.cairo
+  validation.cairo
+  math.cairo
+  events.cairo
+  main_contract.cairo
+/tests
+
+Keep logic modular and auditable.
+
+11. Defensive Programming Checklist
+
+Before any commit:
+
+Are all public inputs validated?
+
+Are all state transitions explicit?
+
+Are all arithmetic operations safe?
+
+Are storage writes minimized?
+
+Are events emitted?
+
+Are edge cases tested?
+
+Is precision documented?
+
+Are failure paths tested?
+
+If unsure about any answer, refactor.
+
+12. AI Assistant Behavior Rules
+
+When generating code, the AI must:
+
+Prefer clarity over optimization
+
+Generate validation logic automatically
+
+Generate failure tests automatically
+
+Suggest edge case tests
+
+Avoid suggesting mainnet deployment
+
+Document financial logic assumptions
+
+Refuse unsafe patterns
+
+All generated logic must be:
+
+Deterministic
+
+Explicit
+
+Defensive
+
+Auditable
+
+13. Final Principle
+
+This is programmable money.
+
+Money contracts must be:
+
+Boring
+
+Predictable
+
+Explicit
+
+Structured
+
+Secure
+
+Testable
+
+Simple beats clever.
+Clarity beats optimization.
+Security beats speed.
+
+Deployment Standard (Ankh)
+
+Deployment process:
+
+Compile with Scarb
+
+Declare contract class in Ankh
+
+Deploy using Class Hash
+
+Save contract address
+
+Verify constructor parameters
+
+Test manually before backend integration
+
+Test on Starknet Sepolia only.
+
+No mainnet deployment without:
+
+Full test coverage
+
+Manual review
+
+Execution verification
+
+Event verification

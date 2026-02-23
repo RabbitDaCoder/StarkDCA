@@ -10,6 +10,7 @@ import { logger } from '../../infrastructure/logger';
 import { priceService } from '../price/price.service';
 import { dcaService } from '../dca/dca.service';
 import { emailService } from '../../infrastructure/email';
+import { executeOnChainPlan, isStarknetConfigured } from './starknet.service';
 
 const EXECUTION_LOCK_PREFIX = 'dca-execution:';
 
@@ -77,7 +78,7 @@ class ExecutionService {
     // Use Prisma interactive transaction for full atomicity
     return prisma.$transaction(
       async (tx) => {
-        // 1. Lock the row with FOR UPDATE to prevent races at DB level
+        // 1. Fetch plan (includes onChainPlanId for contract call)
         const plan = await tx.dCAPlan.findUnique({
           where: { id: planId },
         });
@@ -172,12 +173,23 @@ class ExecutionService {
         const amountIn = plan.amountPerExecution;
         const amountOut = (parseFloat(amountIn) / priceData.price).toFixed(8);
 
-        // 5. Execute on-chain (placeholder — would call starknet service)
+        // 5. Execute on-chain (or simulate if Starknet not configured)
         let txHash: string | null = null;
         try {
-          // TODO: Replace with actual on-chain execution
-          // txHash = await callContract(config.starknet.contractAddress, abi, 'execute_plan', [...])
-          txHash = `0x${Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('hex')}`;
+          if (isStarknetConfigured() && plan.onChainPlanId) {
+            // Real on-chain execution via executor account.
+            // Convert BTC price to wei (18 decimals) for the contract's fixed-point math.
+            const btcPriceWei = BigInt(Math.round(priceData.price * 1e18));
+            txHash = await executeOnChainPlan(plan.onChainPlanId, btcPriceWei);
+          } else {
+            // Starknet not configured or plan has no on-chain ID — simulate execution.
+            // This lets the system work in dev mode without a deployed contract.
+            logger.warn(
+              { planId, hasOnChainId: !!plan.onChainPlanId },
+              'Starknet not configured or no on-chain plan ID — simulating execution',
+            );
+            txHash = `0xSIM_${Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('hex')}`;
+          }
         } catch (err) {
           const failedExec = await tx.executionHistory.create({
             data: {

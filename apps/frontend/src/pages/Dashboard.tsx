@@ -1,14 +1,4 @@
-import { useState } from 'react';
-import {
-  Plus,
-  TrendingUp,
-  Activity,
-  BarChart3,
-  Wallet,
-  Copy,
-  Check,
-  ExternalLink,
-} from 'lucide-react';
+import { Plus, TrendingUp, Activity, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,26 +6,27 @@ import { Badge } from '@/components/ui/badge';
 import { SummaryCards, PlansTable, CreatePlanModal, useDashboard } from '@/features/dca';
 import { PlanStatus } from '@stark-dca/shared-types';
 import { useAuthStore } from '@/store/auth.store';
-import { useWalletStore } from '@/store/wallet.store';
+import { useAccount } from '@starknet-react/core';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { useUsdtBalance, useMbtcBalance, useDCAUserBalance, formatTokenAmount } from '@/hooks';
+import { useState } from 'react';
 
 export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const { plans, summary, portfolio, loading, cancelPlan } = useDashboard();
   const { user } = useAuthStore();
-  const { address, connected, connecting, connect, disconnect } = useWalletStore();
+  const { address, status: walletStatus } = useAccount();
+  const isConnected = walletStatus === 'connected' && !!address;
+
+  // On-chain balances (live from contract)
+  const { balance: usdtBalance } = useUsdtBalance();
+  const { balance: mbtcBalance } = useMbtcBalance();
+  const { balance: dcaBalance } = useDCAUserBalance();
 
   const activePlans = plans.filter((p) => p.status === PlanStatus.Active);
   const recentPlans = plans.slice(0, 5); // Show at most 5 on dashboard
 
   const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  const copyAddress = () => {
-    if (address) {
-      navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-8">
@@ -50,43 +41,8 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Wallet connect / status */}
-          {connected && address ? (
-            <div className="flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/5 px-3 py-2">
-              <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-              <code className="text-xs font-mono text-foreground">{truncateAddress(address)}</code>
-              <button
-                onClick={copyAddress}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5 text-green-500" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-              </button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={disconnect}
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
-              >
-                Disconnect
-              </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={connect}
-              disabled={connecting}
-              variant="outline"
-              size="sm"
-              className="gap-2 border-brand-orange/50 text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange"
-            >
-              <Wallet className="h-4 w-4" />
-              <span className="hidden sm:inline">{connecting ? 'Connecting...' : 'Connect Wallet'}</span>
-              <span className="sm:hidden">{connecting ? '...' : 'Wallet'}</span>
-            </Button>
-          )}
+          {/* Wallet connect / status — powered by starknet-react */}
+          <ConnectWalletButton />
           <Link to="/app/history">
             <Button variant="outline" size="sm" className="gap-2 border-border/50">
               <Activity className="h-4 w-4" />
@@ -139,7 +95,7 @@ export default function Dashboard() {
                     Early Access
                   </Badge>
                 )}
-                {connected && address ? (
+                {isConnected && address ? (
                   <Badge
                     variant="outline"
                     className="border-brand-blue/30 bg-brand-blue/10 text-brand-blue text-xs gap-1"
@@ -169,6 +125,39 @@ export default function Dashboard() {
           </div>
         </div>
       </Card>
+
+      {/* On-chain balance cards — visible when wallet connected */}
+      {isConnected && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="glass rounded-2xl border-border/50">
+            <CardContent className="py-4 px-5">
+              <p className="text-xs text-muted-foreground mb-1">Wallet USDT</p>
+              <p className="text-lg font-bold text-foreground">
+                {formatTokenAmount(usdtBalance)}{' '}
+                <span className="text-xs font-normal text-muted-foreground">USDT</span>
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="glass rounded-2xl border-border/50">
+            <CardContent className="py-4 px-5">
+              <p className="text-xs text-muted-foreground mb-1">DCA Deposited</p>
+              <p className="text-lg font-bold text-brand-orange">
+                {formatTokenAmount(dcaBalance)}{' '}
+                <span className="text-xs font-normal text-muted-foreground">USDT</span>
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="glass rounded-2xl border-border/50">
+            <CardContent className="py-4 px-5">
+              <p className="text-xs text-muted-foreground mb-1">mBTC Earned</p>
+              <p className="text-lg font-bold text-brand-gold">
+                {formatTokenAmount(mbtcBalance, 18, 8)}{' '}
+                <span className="text-xs font-normal text-muted-foreground">mBTC</span>
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Summary cards with portfolio stats */}
       <SummaryCards summary={summary} portfolio={portfolio} />

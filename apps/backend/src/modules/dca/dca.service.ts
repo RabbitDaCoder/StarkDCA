@@ -9,6 +9,11 @@ import { config } from '../../config';
 import { logger } from '../../infrastructure/logger';
 import { NotFoundError, ForbiddenError, ConflictError, BadRequestError } from '../../utils/errors';
 import {
+  createOnChainPlan,
+  cancelOnChainPlan,
+  isStarknetConfigured,
+} from '../execution/starknet.service';
+import {
   parsePaginationParams,
   buildPrismaPage,
   formatPaginatedResult,
@@ -50,10 +55,39 @@ class DcaService {
       },
     });
 
+    // ─── Create plan on-chain (if Starknet is configured) ────────────
+    if (isStarknetConfigured()) {
+      try {
+        const onChainPlanId = await createOnChainPlan(
+          input.amountPerExecution,
+          input.totalExecutions,
+          input.interval,
+        );
+        if (onChainPlanId) {
+          await prisma.dCAPlan.update({
+            where: { id: plan.id },
+            data: { onChainPlanId },
+          });
+          (plan as any).onChainPlanId = onChainPlanId;
+          logger.info({ planId: plan.id, onChainPlanId }, 'Plan linked to on-chain ID');
+        }
+      } catch (err) {
+        // Don't fail the API request if on-chain creation fails.
+        // Plan is still saved in DB and can be retried / linked later.
+        logger.error(
+          { err, planId: plan.id },
+          'On-chain plan creation failed — plan saved in DB only',
+        );
+      }
+    }
+
     // Invalidate user's plan list cache
     await cacheDelPattern(userPlansPattern(userId));
 
-    logger.info({ planId: plan.id, userId }, 'DCA plan created');
+    logger.info(
+      { planId: plan.id, userId, onChainPlanId: (plan as any).onChainPlanId },
+      'DCA plan created',
+    );
 
     // Send plan-activated email (non-blocking)
     this.sendPlanActivatedEmail(userId, plan).catch((err) =>
@@ -82,6 +116,20 @@ class DcaService {
       data: { status: PlanStatus.CANCELLED },
       include: { executions: true },
     });
+
+    // ─── Cancel plan on-chain (if configured and has on-chain ID) ────
+    if (isStarknetConfigured() && plan.onChainPlanId) {
+      try {
+        const txHash = await cancelOnChainPlan(plan.onChainPlanId);
+        logger.info(
+          { planId, onChainPlanId: plan.onChainPlanId, txHash },
+          'Plan cancelled on-chain',
+        );
+      } catch (err) {
+        // Don't fail the API request — plan is already cancelled in DB.
+        logger.error({ err, planId }, 'On-chain plan cancellation failed — cancelled in DB only');
+      }
+    }
 
     // Invalidate caches
     const { cacheDel } = await import('../../infrastructure/redis');

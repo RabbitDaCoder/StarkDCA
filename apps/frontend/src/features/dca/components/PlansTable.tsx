@@ -123,8 +123,8 @@ export function PlansTable({ plans, onCancel }: Props) {
                 )}
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className={badge.className}>
-                  {badge.label}
+                <Badge variant="outline" className={badge?.className ?? ''}>
+                  {badge?.label ?? plan.status}
                 </Badge>
               </TableCell>
               <TableCell>

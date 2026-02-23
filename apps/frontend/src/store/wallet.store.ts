@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { connectWallet, disconnectWallet } from '@/services/blockchain/wallet';
+import { connectWallet, disconnectWallet, syncWalletAddress } from '@/services/blockchain/wallet';
 
 interface WalletState {
   address: string | null;
@@ -7,6 +7,8 @@ interface WalletState {
   connecting: boolean;
   connect: () => Promise<void>;
   disconnect: () => void;
+  /** Sync address from starknet-react useAccount hook */
+  syncFromProvider: (address: string | undefined) => void;
 }
 
 export const useWalletStore = create<WalletState>((set) => ({
@@ -27,5 +29,14 @@ export const useWalletStore = create<WalletState>((set) => ({
   disconnect: async () => {
     await disconnectWallet();
     set({ address: null, connected: false });
+  },
+
+  syncFromProvider: (address: string | undefined) => {
+    syncWalletAddress(address);
+    if (address) {
+      set({ address, connected: true, connecting: false });
+    } else {
+      set({ address: null, connected: false, connecting: false });
+    }
   },
 }));

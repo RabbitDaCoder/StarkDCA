@@ -123,12 +123,12 @@ export interface LaunchStatus {
 export const adminApi = {
   // ─── Dashboard Stats ──────────────────────────────────────────────
   async getDashboardStats(): Promise<AdminStats> {
-    const response = await apiClient.get('/v1/admin/stats');
+    const response = await apiClient.get('/admin/stats');
     return unwrap(response);
   },
 
   async getPlatformOverview(): Promise<PlatformOverview> {
-    const response = await apiClient.get('/v1/admin/overview');
+    const response = await apiClient.get('/admin/overview');
     return unwrap(response);
   },
 
@@ -140,12 +140,12 @@ export const adminApi = {
     sortOrder?: string;
     search?: string;
   }): Promise<PaginatedResponse<WaitlistUser>> {
-    const response = await apiClient.get('/v1/admin/waitlist', { params });
+    const response = await apiClient.get('/admin/waitlist', { params });
     return unwrap(response);
   },
 
   async exportWaitlistCsv(): Promise<Blob> {
-    const response = await apiClient.get('/v1/admin/waitlist/export', {
+    const response = await apiClient.get('/admin/waitlist/export', {
       responseType: 'blob',
     });
     return response.data;
@@ -158,17 +158,17 @@ export const adminApi = {
     search?: string;
     role?: string;
   }): Promise<PaginatedResponse<AdminUser>> {
-    const response = await apiClient.get('/v1/admin/users', { params });
+    const response = await apiClient.get('/admin/users', { params });
     return unwrap(response);
   },
 
   async suspendUser(userId: string): Promise<AdminUser> {
-    const response = await apiClient.post(`/v1/admin/users/${userId}/suspend`);
+    const response = await apiClient.post(`/admin/users/${userId}/suspend`);
     return unwrap(response);
   },
 
   async reactivateUser(userId: string): Promise<AdminUser> {
-    const response = await apiClient.post(`/v1/admin/users/${userId}/reactivate`);
+    const response = await apiClient.post(`/admin/users/${userId}/reactivate`);
     return unwrap(response);
   },
 
@@ -179,7 +179,7 @@ export const adminApi = {
     status?: string;
     search?: string;
   }): Promise<PaginatedPlansResponse> {
-    const response = await apiClient.get('/v1/admin/plans', { params });
+    const response = await apiClient.get('/admin/plans', { params });
     return unwrap(response);
   },
 
@@ -190,7 +190,7 @@ export const adminApi = {
     template: 'announcement' | 'launch';
     variables?: Record<string, string>;
   }): Promise<EmailResult> {
-    const response = await apiClient.post('/v1/admin/email/send', data);
+    const response = await apiClient.post('/admin/email/send', data);
     return unwrap(response);
   },
 
@@ -201,30 +201,30 @@ export const adminApi = {
     template: 'announcement' | 'launch';
     variables?: Record<string, string>;
   }): Promise<EmailResult> {
-    const response = await apiClient.post('/v1/admin/email/bulk', data);
+    const response = await apiClient.post('/admin/email/bulk', data);
     return unwrap(response);
   },
 
   // ─── System ───────────────────────────────────────────────────────
   async getSystemHealth(): Promise<SystemHealth> {
-    const response = await apiClient.get('/v1/admin/system/health');
+    const response = await apiClient.get('/admin/system/health');
     return unwrap(response);
   },
 
   // ─── Analytics ────────────────────────────────────────────────────
   async getExecutionAnalytics(days?: number): Promise<ExecutionAnalytics[]> {
-    const response = await apiClient.get('/v1/admin/analytics/executions', { params: { days } });
+    const response = await apiClient.get('/admin/analytics/executions', { params: { days } });
     return unwrap(response);
   },
 
   // ─── Launch ───────────────────────────────────────────────────────
   async launchPlatform(): Promise<LaunchResult> {
-    const response = await apiClient.post('/v1/admin/launch');
+    const response = await apiClient.post('/admin/launch');
     return unwrap(response);
   },
 
   async getLaunchStatus(): Promise<LaunchStatus> {
-    const response = await apiClient.get('/v1/admin/launch/status');
+    const response = await apiClient.get('/admin/launch/status');
     return unwrap(response);
   },
 };

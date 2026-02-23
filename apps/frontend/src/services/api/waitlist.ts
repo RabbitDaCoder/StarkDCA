@@ -26,17 +26,17 @@ export interface UserWaitlistInfo {
 
 export const waitlistApi = {
   async join(name: string, email: string, source?: string): Promise<JoinWaitlistResponse> {
-    const response = await apiClient.post('/v1/waitlist/join', { name, email, source });
+    const response = await apiClient.post('/waitlist/join', { name, email, source });
     return unwrap(response);
   },
 
   async getStats(): Promise<WaitlistStats> {
-    const response = await apiClient.get('/v1/waitlist/stats');
+    const response = await apiClient.get('/waitlist/stats');
     return unwrap(response);
   },
 
   async getUserWaitlistInfo(): Promise<UserWaitlistInfo> {
-    const response = await apiClient.get('/v1/waitlist/me');
+    const response = await apiClient.get('/waitlist/me');
     return unwrap(response);
   },
 };

@@ -36,49 +36,46 @@ interface VerifyOtpResponse {
 
 export const authApi = {
   async signup(name: string, email: string, password: string): Promise<AuthResponse> {
-    const response = await apiClient.post('/v1/auth/signup', { name, email, password });
+    const response = await apiClient.post('/auth/signup', { name, email, password });
     return unwrap(response);
   },
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await apiClient.post('/v1/auth/login', { email, password });
+    const response = await apiClient.post('/auth/login', { email, password });
     return unwrap(response);
   },
 
   async logout(): Promise<void> {
-    await apiClient.post('/v1/auth/logout');
+    await apiClient.post('/auth/logout');
   },
 
   async refresh(): Promise<RefreshResponse> {
-    const response = await apiClient.post('/v1/auth/refresh');
+    const response = await apiClient.post('/auth/refresh');
     return unwrap(response);
   },
 
   async getProfile(): Promise<UserProfile> {
-    const response = await apiClient.get('/v1/auth/me');
+    const response = await apiClient.get('/auth/me');
     return unwrap(response);
   },
 
   async verifyOtp(otp: string): Promise<VerifyOtpResponse> {
-    const response = await apiClient.post('/v1/auth/verify-otp', { otp });
+    const response = await apiClient.post('/auth/verify-otp', { otp });
     return unwrap(response);
   },
 
   async resendOtp(): Promise<{ sent: boolean; message: string }> {
-    const response = await apiClient.post('/v1/auth/resend-otp');
+    const response = await apiClient.post('/auth/resend-otp');
     return unwrap(response);
   },
 
   getGoogleAuthUrl(): string {
-    // Reuse the same baseURL as the API client so we never double-prefix /api.
-    // In dev it resolves to '/api', in prod to the full absolute URL
-    // (e.g. 'https://…onrender.com/api').
-    const baseUrl = apiClient.defaults.baseURL || '/api';
-    return `${baseUrl}/v1/auth/google`;
+    const baseUrl = apiClient.defaults.baseURL || '/api/v1';
+    return `${baseUrl}/auth/google`;
   },
 
   async forgotPassword(email: string): Promise<{ sent: boolean; message: string }> {
-    const response = await apiClient.post('/v1/auth/forgot-password', { email });
+    const response = await apiClient.post('/auth/forgot-password', { email });
     return unwrap(response);
   },
 
@@ -86,7 +83,7 @@ export const authApi = {
     token: string,
     password: string,
   ): Promise<{ reset: boolean; message: string }> {
-    const response = await apiClient.post('/v1/auth/reset-password', { token, password });
+    const response = await apiClient.post('/auth/reset-password', { token, password });
     return unwrap(response);
   },
 };

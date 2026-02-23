@@ -1,0 +1,5 @@
+{
+    "ankh.useEnvForSecrets":  true,
+    "ankh.rpcUrlSepolia":  "https://api.cartridge.gg/x/starknet/sepolia",
+    "ankh.accountAddressSepolia":  "0x04032F999195a440574358D051e2A7326161dF1C0100Af2e5D2B3010aA18b991"
+}
