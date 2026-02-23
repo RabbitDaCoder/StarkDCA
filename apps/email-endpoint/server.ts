@@ -120,7 +120,7 @@ async function handleSendEmail(req: VercelRequest, res: VercelResponse): Promise
           return;
         }
         const tpl = getWaitlistConfirmationTemplate(name, position);
-        emailOptions = { to, subject: "You're on the Waitlist 🎉", html: tpl.html, text: tpl.text };
+        emailOptions = { to, subject: "You're on the Waitlist", html: tpl.html, text: tpl.text };
         break;
       }
 
@@ -128,7 +128,7 @@ async function handleSendEmail(req: VercelRequest, res: VercelResponse): Promise
         const tpl = getLaunchEmailTemplate(name, config.frontendUrl);
         emailOptions = {
           to,
-          subject: '🚀 StarkDCA is Live — Your Dashboard is Ready!',
+          subject: 'StarkDCA is Live — Your Dashboard is Ready',
           html: tpl.html,
           text: tpl.text,
         };
@@ -173,7 +173,7 @@ async function handleSendEmail(req: VercelRequest, res: VercelResponse): Promise
         const tpl = getPlanActivatedTemplate(name, planDetails, config.frontendUrl);
         emailOptions = {
           to,
-          subject: '✅ Your DCA Plan is Active — StarkDCA',
+          subject: 'Your DCA Plan is Active — StarkDCA',
           html: tpl.html,
           text: tpl.text,
         };
@@ -194,7 +194,7 @@ async function handleSendEmail(req: VercelRequest, res: VercelResponse): Promise
         const tpl = getBtcAccumulatedTemplate(name, executionDetails, config.frontendUrl);
         emailOptions = {
           to,
-          subject: `₿ ${executionDetails.amountOut} BTC Accumulated — StarkDCA`,
+          subject: `${executionDetails.amountOut} BTC Accumulated — StarkDCA`,
           html: tpl.html,
           text: tpl.text,
         };

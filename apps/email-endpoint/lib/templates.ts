@@ -1,42 +1,65 @@
 // ─── Email Templates ─────────────────────────────────────────────────
-// All HTML email templates for StarkDCA, migrated from the backend.
+// All HTML email templates for StarkDCA.
 
-/** Shared social-links + contact footer for all email templates */
+/** Shared footer for all email templates */
 function emailFooter(): string {
   return `
     <div style="text-align: center; margin-top: 20px; padding-top: 15px;">
       <p style="margin: 0 0 8px 0;">
-        <a href="https://x.com/StarkDCA_" style="color: #1F3878; text-decoration: none; font-size: 13px; margin: 0 6px;">𝕏 Twitter</a>
-        &nbsp;·&nbsp;
+        <a href="https://x.com/StarkDCA_" style="color: #1F3878; text-decoration: none; font-size: 13px; margin: 0 6px;">Twitter</a>
+        &nbsp;&middot;&nbsp;
         <a href="https://github.com/RabbitDaCoder/StarkDCA" style="color: #1F3878; text-decoration: none; font-size: 13px; margin: 0 6px;">GitHub</a>
       </p>
       <p style="color: #aaa; font-size: 12px; margin: 4px 0 0 0;">
         <a href="https://www.starkdca.xyz" style="color: #1F3878; text-decoration: none;">www.starkdca.xyz</a>
-        &nbsp;·&nbsp;
+        &nbsp;&middot;&nbsp;
         <a href="mailto:support@starkdca.xyz" style="color: #888; text-decoration: none;">support@starkdca.xyz</a>
       </p>
     </div>`;
 }
 
-export function getOtpEmailTemplate(name: string, otp: string): { html: string; text: string } {
-  const html = `
+/** Common HTML wrapper for consistent layout */
+function emailWrapper(
+  title: string,
+  headerBg: string,
+  headerContent: string,
+  bodyContent: string,
+): string {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Your Email</title>
+  <title>${title}</title>
 </head>
 <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">Verify Your Email</h1>
-    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">One step closer to your StarkDCA account</p>
+  <div style="background: ${headerBg}; padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+    ${headerContent}
   </div>
 
   <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
+    ${bodyContent}
+    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
+      Best regards,<br>The StarkDCA Team
+    </p>
+    ${emailFooter()}
+  </div>
+</body>
+</html>`;
+}
 
-    <p style="color: #555;">Use the verification code below to confirm your email address:</p>
+// ─── OTP Verification ────────────────────────────────────────────────
+
+export function getOtpEmailTemplate(name: string, otp: string): { html: string; text: string } {
+  const html = emailWrapper(
+    'Verify Your Email',
+    'linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">Email Verification</h1>
+     <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Confirm your StarkDCA account</p>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
+
+    <p style="color: #555;">Please use the verification code below to confirm your email address:</p>
 
     <div style="text-align: center; margin: 30px 0;">
       <div style="display: inline-block; background: #F4F4F4; border: 2px dashed #CDA41B; border-radius: 12px; padding: 20px 40px;">
@@ -47,142 +70,95 @@ export function getOtpEmailTemplate(name: string, otp: string): { html: string; 
     <p style="color: #888; font-size: 14px; text-align: center;">This code expires in <strong>10 minutes</strong>.</p>
 
     <div style="background: #FFF8F0; border-left: 4px solid #FE6606; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-      <p style="margin: 0; font-size: 13px; color: #666;">If you didn't create a StarkDCA account, you can safely ignore this email.</p>
-    </div>
+      <p style="margin: 0; font-size: 13px; color: #666;">If you did not create a StarkDCA account, you can safely ignore this email.</p>
+    </div>`,
+  );
 
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
-
-  const text = `Hi ${name}, your verification code is: ${otp}. It expires in 10 minutes.`;
+  const text = `Hello ${name}, your verification code is: ${otp}. It expires in 10 minutes.`;
 
   return { html, text };
 }
+
+// ─── Waitlist Welcome ────────────────────────────────────────────────
 
 export function getWaitlistWelcomeTemplate(name: string): { html: string; text: string } {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to StarkDCA Waitlist</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">🎉 You're on the List!</h1>
-  </div>
-  
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 18px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-    
-    <p>Thank you for joining the <strong>StarkDCA</strong> waitlist! You're now secured a spot for early access to our revolutionary Bitcoin DCA platform built on Starknet.</p>
-    
-    <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-      <h3 style="margin: 0 0 10px 0; color: #667eea;">What's Coming:</h3>
-      <ul style="margin: 0; padding-left: 20px; color: #4a4a6a;">
+  const html = emailWrapper(
+    'Welcome to the StarkDCA Waitlist',
+    'linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 28px; font-family: 'Poppins', sans-serif;">Welcome to the Waitlist</h1>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
+
+    <p style="color: #555;">Thank you for your interest in <strong>StarkDCA</strong>. You have been added to our waitlist and will receive early access to our automated Bitcoin DCA platform built on Starknet.</p>
+
+    <div style="background: #F8F9FF; border-left: 4px solid #1F3878; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
+      <h3 style="margin: 0 0 10px 0; color: #1F3878; font-size: 15px;">What to expect:</h3>
+      <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
         <li>Automated Dollar-Cost Averaging into BTC</li>
-        <li>Non-custodial &amp; fully on-chain execution</li>
+        <li>Non-custodial, fully on-chain execution</li>
         <li>Low gas fees powered by Starknet</li>
-        <li>Smart scheduling: daily, weekly, or monthly</li>
+        <li>Flexible scheduling &mdash; daily, weekly, or monthly</li>
       </ul>
     </div>
-    
-    <p>We'll notify you as soon as we launch. In the meantime, follow us on Twitter for updates!</p>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="https://x.com/StarkDCA_" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Follow @StarkDCA_</a>
-    </div>
-    
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Building the future of Bitcoin investment on Starknet</em>
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
 
-  const text = `Hi ${name}, thank you for joining the StarkDCA waitlist! You're now on the list for early access to our Bitcoin DCA platform on Starknet.`;
+    <p style="color: #555; font-size: 14px;">We will notify you as soon as the platform launches. In the meantime, follow us on Twitter for updates.</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://x.com/StarkDCA_" style="background: #1F3878; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Follow @StarkDCA_</a>
+    </div>`,
+  );
+
+  const text = `Hello ${name}, thank you for joining the StarkDCA waitlist. You will receive early access when the platform launches.`;
 
   return { html, text };
 }
+
+// ─── Signup Welcome ──────────────────────────────────────────────────
 
 export function getSignupWelcomeTemplate(
   name: string,
   frontendUrl: string,
 ): { html: string; text: string } {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to StarkDCA</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">₿ Welcome to StarkDCA!</h1>
-  </div>
-  
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 18px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-    
-    <p>Your StarkDCA account has been created successfully! You're now ready to start automating your Bitcoin investments.</p>
-    
-    <div style="background: #fff8f0; border-left: 4px solid #f7931a; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-      <h3 style="margin: 0 0 10px 0; color: #f7931a;">Getting Started:</h3>
-      <ol style="margin: 0; padding-left: 20px; color: #4a4a6a;">
+  const html = emailWrapper(
+    'Welcome to StarkDCA',
+    'linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 28px; font-family: 'Poppins', sans-serif;">Welcome to StarkDCA</h1>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
+
+    <p style="color: #555;">Your StarkDCA account has been created successfully. You are now ready to start automating your Bitcoin investments on Starknet.</p>
+
+    <div style="background: #F8F9FF; border-left: 4px solid #1F3878; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
+      <h3 style="margin: 0 0 10px 0; color: #1F3878; font-size: 15px;">Getting started:</h3>
+      <ol style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
         <li>Connect your Starknet wallet</li>
         <li>Create your first DCA plan</li>
-        <li>Fund your wallet and watch the automation work</li>
+        <li>Fund your wallet and let automation handle the rest</li>
       </ol>
     </div>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Go to Dashboard</a>
-    </div>
-    
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Stack sats. Stay sovereign.</em>
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
 
-  const text = `Hi ${name}, welcome to StarkDCA! Your account has been created successfully.`;
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block; font-family: 'Poppins', sans-serif;">Go to Dashboard</a>
+    </div>`,
+  );
+
+  const text = `Hello ${name}, welcome to StarkDCA. Your account has been created. Visit your dashboard to get started: ${frontendUrl}/dashboard`;
 
   return { html, text };
 }
+
+// ─── Waitlist Confirmation (after OTP verified) ──────────────────────
 
 export function getWaitlistConfirmationTemplate(
   name: string,
   position: number,
 ): { html: string; text: string } {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You're on the Waitlist!</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px; font-family: 'Poppins', sans-serif;">🎉 You're on the Waitlist!</h1>
-    <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0;">Your email has been verified successfully</p>
-  </div>
+  const html = emailWrapper(
+    'Waitlist Confirmed',
+    'linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 28px; font-family: 'Poppins', sans-serif;">You're on the Waitlist</h1>
+     <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0; font-size: 14px;">Your email has been verified</p>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
 
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-
-    <p>Congratulations! Your email has been verified and you're officially on the StarkDCA waitlist.</p>
+    <p style="color: #555;">Your email has been verified and you are now confirmed on the StarkDCA waitlist.</p>
 
     <div style="text-align: center; margin: 30px 0;">
       <div style="display: inline-block; background: linear-gradient(135deg, #FFF8F0, #FEF3E0); border: 2px solid #CDA41B; border-radius: 16px; padding: 25px 40px;">
@@ -192,68 +168,51 @@ export function getWaitlistConfirmationTemplate(
     </div>
 
     <div style="background: #F8F9FF; border-left: 4px solid #1F3878; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-      <h3 style="margin: 0 0 10px 0; color: #1F3878; font-family: 'Poppins', sans-serif;">What's Next?</h3>
+      <h3 style="margin: 0 0 10px 0; color: #1F3878; font-size: 15px;">What happens next?</h3>
       <p style="margin: 0; color: #555; font-size: 14px;">
-        We are currently finalizing our smart contract and dashboard system.
-        You are officially on our waitlist and will be among the first to access StarkDCA when we launch.
+        We are finalizing the smart contract and dashboard. As a confirmed waitlist member, you will be among the first to receive access when StarkDCA launches.
       </p>
       <p style="margin: 10px 0 0 0; color: #555; font-size: 14px;">
-        We will send you an official launch email as soon as we're ready. Stay tuned!
+        We will send you a launch notification as soon as the platform is ready.
       </p>
     </div>
 
     <div style="background: #FFF8F0; border-left: 4px solid #FE6606; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-      <h4 style="margin: 0 0 8px 0; color: #FE6606;">What to Expect:</h4>
+      <h4 style="margin: 0 0 8px 0; color: #FE6606; font-size: 14px;">Platform features:</h4>
       <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
         <li>Automated Dollar-Cost Averaging into BTC</li>
-        <li>Non-custodial &amp; fully on-chain execution on Starknet</li>
-        <li>Low gas fees &amp; smart scheduling</li>
+        <li>Non-custodial, fully on-chain execution on Starknet</li>
+        <li>Low gas fees and flexible scheduling</li>
         <li>Priority access for waitlist members</li>
       </ul>
     </div>
 
-    <p>In the meantime, follow us on Twitter for the latest updates!</p>
+    <p style="color: #555; font-size: 14px;">Follow us on Twitter for the latest updates.</p>
 
     <div style="text-align: center; margin: 30px 0;">
       <a href="https://x.com/StarkDCA_" style="background: #1F3878; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; font-family: 'Poppins', sans-serif;">Follow @StarkDCA_</a>
-    </div>
+    </div>`,
+  );
 
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Building the future of Bitcoin investment on Starknet</em>
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
-
-  const text = `Hi ${name}, your email has been verified and you're #${position} on our waitlist! We'll notify you as soon as we launch.`;
+  const text = `Hello ${name}, your email has been verified and you are #${position} on the StarkDCA waitlist. We will notify you when the platform launches.`;
 
   return { html, text };
 }
+
+// ─── Password Reset ──────────────────────────────────────────────────
 
 export function getPasswordResetTemplate(
   name: string,
   resetUrl: string,
 ): { html: string; text: string } {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset Your Password</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">Reset Your Password</h1>
-    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Secure your StarkDCA account</p>
-  </div>
+  const html = emailWrapper(
+    'Reset Your Password',
+    'linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">Password Reset</h1>
+     <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Secure your StarkDCA account</p>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
 
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-
-    <p style="color: #555;">We received a request to reset the password for your StarkDCA account. Click the button below to set a new password:</p>
+    <p style="color: #555;">We received a request to reset the password associated with your StarkDCA account. Click the button below to set a new password:</p>
 
     <div style="text-align: center; margin: 35px 0;">
       <a href="${resetUrl}" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 16px 40px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-size: 16px; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.4);">Reset Password</a>
@@ -262,82 +221,57 @@ export function getPasswordResetTemplate(
     <p style="color: #888; font-size: 14px; text-align: center;">This link expires in <strong>1 hour</strong>.</p>
 
     <p style="color: #888; font-size: 13px; text-align: center; word-break: break-all;">
-      If the button doesn't work, copy and paste this link:<br>
+      If the button does not work, copy and paste this link into your browser:<br>
       <a href="${resetUrl}" style="color: #1F3878;">${resetUrl}</a>
     </p>
 
     <div style="background: #FFF8F0; border-left: 4px solid #FE6606; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-      <p style="margin: 0; font-size: 13px; color: #666;">If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
-    </div>
+      <p style="margin: 0; font-size: 13px; color: #666;">If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+    </div>`,
+  );
 
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
-
-  const text = `Hi ${name}, we received a request to reset your StarkDCA password. Visit this link to set a new password: ${resetUrl} — This link expires in 1 hour. If you didn't request this, ignore this email.`;
+  const text = `Hello ${name}, we received a request to reset your StarkDCA password. Visit this link to set a new password: ${resetUrl} — This link expires in 1 hour. If you did not request this, please ignore this email.`;
 
   return { html, text };
 }
+
+// ─── Launch Notification ─────────────────────────────────────────────
 
 export function getLaunchEmailTemplate(
   name: string,
   frontendUrl: string,
 ): { html: string; text: string } {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StarkDCA is Live!</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #FE6606 0%, #CDA41B 100%); padding: 50px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 32px; font-family: 'Poppins', sans-serif;">🚀 We're Live!</h1>
-    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your dashboard is now unlocked</p>
-  </div>
+  const html = emailWrapper(
+    'StarkDCA is Live',
+    'linear-gradient(135deg, #FE6606 0%, #CDA41B 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 32px; font-family: 'Poppins', sans-serif;">StarkDCA is Live</h1>
+     <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your dashboard is now available</p>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
 
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 18px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
+    <p style="font-size: 16px; color: #333;">We are pleased to announce that <strong>StarkDCA is now live</strong>. Your dashboard has been unlocked and is ready to use.</p>
 
-    <p style="font-size: 16px;">The wait is over! <strong>StarkDCA is officially live</strong> and your dashboard is now unlocked.</p>
-
-    <p style="color: #555;">As a waitlist member, you have priority access to all features:</p>
+    <p style="color: #555;">As a waitlist member, you have priority access to all platform features:</p>
 
     <div style="background: #F8F9FF; border-left: 4px solid #1F3878; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-      <ul style="margin: 0; padding-left: 20px; color: #555;">
-        <li style="margin-bottom: 8px;">✅ Create automated DCA plans</li>
-        <li style="margin-bottom: 8px;">✅ Connect your Starknet wallet</li>
-        <li style="margin-bottom: 8px;">✅ Set up daily, weekly, or monthly strategies</li>
-        <li>✅ Track your portfolio in real-time</li>
+      <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
+        <li style="margin-bottom: 8px;">Create automated DCA plans</li>
+        <li style="margin-bottom: 8px;">Connect your Starknet wallet</li>
+        <li style="margin-bottom: 8px;">Configure daily, weekly, or monthly strategies</li>
+        <li>Track your portfolio in real time</li>
       </ul>
     </div>
 
     <div style="text-align: center; margin: 35px 0;">
-      <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 16px 40px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-size: 16px; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.4);">Go to Dashboard →</a>
-    </div>
+      <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 16px 40px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-size: 16px; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.4);">Go to Dashboard</a>
+    </div>`,
+  );
 
-    <p style="color: #888; font-size: 14px; text-align: center;">Welcome to the future of Bitcoin investment on Starknet.</p>
-
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Stack sats. Stay sovereign.</em>
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
-
-  const text = `Hi ${name}, great news! StarkDCA is officially live. Your dashboard is now unlocked. Log in and start building your Bitcoin wealth: ${frontendUrl}/dashboard`;
+  const text = `Hello ${name}, StarkDCA is now live. Your dashboard has been unlocked. Log in to get started: ${frontendUrl}/dashboard`;
 
   return { html, text };
 }
 
-// ─── DCA Plan Event Templates ────────────────────────────────────────
+// ─── DCA Plan Activated ──────────────────────────────────────────────
 
 export function getPlanActivatedTemplate(
   name: string,
@@ -349,24 +283,14 @@ export function getPlanActivatedTemplate(
   },
   frontendUrl: string,
 ): { html: string; text: string } {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DCA Plan Activated</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">✅ DCA Plan Activated</h1>
-    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Your Bitcoin accumulation has begun</p>
-  </div>
+  const html = emailWrapper(
+    'DCA Plan Activated',
+    'linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">DCA Plan Activated</h1>
+     <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Your Bitcoin accumulation has begun</p>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
 
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-
-    <p style="color: #555;">Your new DCA plan has been successfully created and is now active. Here are the details:</p>
+    <p style="color: #555;">Your DCA plan has been created and is now active. Below are the plan details:</p>
 
     <div style="background: #F8F9FF; border: 1px solid #E8ECFF; border-radius: 12px; padding: 24px; margin: 25px 0;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -389,25 +313,19 @@ export function getPlanActivatedTemplate(
       </table>
     </div>
 
-    <p style="color: #555; font-size: 14px;">Your first execution will run automatically based on your selected schedule. You can monitor progress from your dashboard.</p>
+    <p style="color: #555; font-size: 14px;">Your first execution will run automatically according to your selected schedule. You can monitor progress from your dashboard at any time.</p>
 
     <div style="text-align: center; margin: 30px 0;">
       <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.3);">View Dashboard</a>
-    </div>
+    </div>`,
+  );
 
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Stack sats. Stay sovereign.</em>
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
-
-  const text = `Hi ${name}, your DCA plan has been activated! ${planDetails.amount} USDT → BTC, ${planDetails.interval}, ${planDetails.totalExecutions} buys, total deposit: ${planDetails.totalDeposit} USDT. View your dashboard: ${frontendUrl}/dashboard`;
+  const text = `Hello ${name}, your DCA plan has been activated. ${planDetails.amount} USDT per buy, ${planDetails.interval}, ${planDetails.totalExecutions} total buys, total deposit: ${planDetails.totalDeposit} USDT. Dashboard: ${frontendUrl}/dashboard`;
 
   return { html, text };
 }
+
+// ─── BTC Accumulated (Execution Notification) ────────────────────────
 
 export function getBtcAccumulatedTemplate(
   name: string,
@@ -425,30 +343,20 @@ export function getBtcAccumulatedTemplate(
   const progress = Math.round(
     (executionDetails.executionNumber / executionDetails.totalExecutions) * 100,
   );
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BTC Accumulated</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #f7931a 0%, #CDA41B 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">₿ BTC Accumulated!</h1>
-    <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0 0; font-size: 14px;">Your ${executionDetails.planInterval} DCA buy was executed</p>
-  </div>
+  const html = emailWrapper(
+    'BTC Accumulated',
+    'linear-gradient(135deg, #f7931a 0%, #CDA41B 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">BTC Accumulated</h1>
+     <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0 0; font-size: 14px;">Your ${executionDetails.planInterval} DCA buy has been executed</p>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
 
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-
-    <p style="color: #555;">Your DCA plan just executed successfully. Here's your accumulation summary:</p>
+    <p style="color: #555;">Your DCA plan has completed an execution. Here is the summary:</p>
 
     <div style="text-align: center; margin: 25px 0;">
       <div style="display: inline-block; background: linear-gradient(135deg, #FFF8F0, #FEF3E0); border: 2px solid #CDA41B; border-radius: 16px; padding: 25px 40px;">
         <p style="margin: 0 0 5px 0; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 2px;">BTC Received</p>
         <span style="font-size: 32px; font-weight: 700; color: #f7931a; font-family: 'Poppins', sans-serif;">${executionDetails.amountOut}</span>
-        <p style="margin: 5px 0 0 0; font-size: 13px; color: #888;">at $${executionDetails.price}/BTC</p>
+        <p style="margin: 5px 0 0 0; font-size: 13px; color: #888;">at $${executionDetails.price} / BTC</p>
       </div>
     </div>
 
@@ -475,26 +383,20 @@ export function getBtcAccumulatedTemplate(
     </div>
 
     <p style="color: #888; font-size: 13px; text-align: center;">
-      Tx: <a href="https://starkscan.co/tx/${executionDetails.txHash}" style="color: #1F3878;">${executionDetails.txHash.slice(0, 10)}...${executionDetails.txHash.slice(-8)}</a>
+      Transaction: <a href="https://starkscan.co/tx/${executionDetails.txHash}" style="color: #1F3878;">${executionDetails.txHash.slice(0, 10)}...${executionDetails.txHash.slice(-8)}</a>
     </p>
 
     <div style="text-align: center; margin: 25px 0;">
       <a href="${frontendUrl}/dashboard/activity" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.3);">View Activity</a>
-    </div>
+    </div>`,
+  );
 
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team<br>
-      <em>Stack sats. Stay sovereign.</em>
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
-
-  const text = `Hi ${name}, your DCA plan executed! You received ${executionDetails.amountOut} BTC for ${executionDetails.amountIn} USDT at $${executionDetails.price}/BTC. Execution ${executionDetails.executionNumber}/${executionDetails.totalExecutions}. Tx: ${executionDetails.txHash}`;
+  const text = `Hello ${name}, your DCA plan executed successfully. You received ${executionDetails.amountOut} BTC for ${executionDetails.amountIn} USDT at $${executionDetails.price}/BTC. Execution ${executionDetails.executionNumber}/${executionDetails.totalExecutions}. Tx: ${executionDetails.txHash}`;
 
   return { html, text };
 }
+
+// ─── Plan Cancelled ──────────────────────────────────────────────────
 
 export function getPlanCancelledTemplate(
   name: string,
@@ -506,24 +408,14 @@ export function getPlanCancelledTemplate(
   },
   frontendUrl: string,
 ): { html: string; text: string } {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DCA Plan Cancelled</title>
-</head>
-<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F4F4F4;">
-  <div style="background: linear-gradient(135deg, #4A4A6A 0%, #2d2d4a 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">DCA Plan Cancelled</h1>
-    <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Your plan has been stopped</p>
-  </div>
+  const html = emailWrapper(
+    'DCA Plan Cancelled',
+    'linear-gradient(135deg, #4A4A6A 0%, #2d2d4a 100%)',
+    `<h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">DCA Plan Cancelled</h1>
+     <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 14px;">Your plan has been stopped</p>`,
+    `<p style="font-size: 16px; margin-top: 0;">Hello <strong>${name}</strong>,</p>
 
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${name}</strong>,</p>
-
-    <p style="color: #555;">Your DCA plan has been cancelled. Here's a summary of the plan:</p>
+    <p style="color: #555;">Your DCA plan has been cancelled. Below is a summary:</p>
 
     <div style="background: #F8F9FF; border: 1px solid #E8ECFF; border-radius: 12px; padding: 24px; margin: 25px 0;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -544,24 +436,19 @@ export function getPlanCancelledTemplate(
       </table>
     </div>
 
-    <p style="color: #555; font-size: 14px;">Any BTC already accumulated from completed executions remains in your wallet. You can create a new plan anytime.</p>
+    <p style="color: #555; font-size: 14px;">Any BTC already accumulated from completed executions remains in your wallet. You can create a new plan at any time from your dashboard.</p>
 
     <div style="text-align: center; margin: 30px 0;">
       <a href="${frontendUrl}/dashboard" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-block; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 12px rgba(254, 102, 6, 0.3);">Create New Plan</a>
-    </div>
+    </div>`,
+  );
 
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`;
-
-  const text = `Hi ${name}, your DCA plan (${planDetails.amount} USDT / ${planDetails.interval}) has been cancelled. ${planDetails.executionsCompleted}/${planDetails.totalExecutions} buys were completed. Create a new plan: ${frontendUrl}/dashboard`;
+  const text = `Hello ${name}, your DCA plan (${planDetails.amount} USDT / ${planDetails.interval}) has been cancelled. ${planDetails.executionsCompleted}/${planDetails.totalExecutions} buys were completed. Dashboard: ${frontendUrl}/dashboard`;
 
   return { html, text };
 }
+
+// ─── Custom Templates ────────────────────────────────────────────────
 
 export function getCustomTemplate(
   templateName: string,
@@ -569,52 +456,24 @@ export function getCustomTemplate(
   frontendUrl: string,
 ): { html: string } {
   const templates: Record<string, string> = {
-    announcement: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">{{title}}</h1>
-  </div>
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p>Hi {{name}},</p>
-    <p>{{content}}</p>
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`,
-    launch: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a2e; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f8;">
-  <div style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">🚀 We're Live!</h1>
-  </div>
-  <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <p>Hi {{name}},</p>
-    <p>Great news! StarkDCA is now live and you have early access as a waitlist member!</p>
-    <p>{{content}}</p>
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${frontendUrl}/signup" style="background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Create Your Account</a>
-    </div>
-    <p style="color: #888; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-bottom: 0;">
-      – The StarkDCA Team
-    </p>
-    ${emailFooter()}
-  </div>
-</body>
-</html>`,
+    announcement: emailWrapper(
+      'StarkDCA Announcement',
+      'linear-gradient(135deg, #1F3878 0%, #2d4ea0 100%)',
+      `<h1 style="color: white; margin: 0; font-size: 24px; font-family: 'Poppins', sans-serif;">{{title}}</h1>`,
+      `<p style="font-size: 16px; margin-top: 0;">Hello {{name}},</p>
+       <p style="color: #555;">{{content}}</p>`,
+    ),
+    launch: emailWrapper(
+      'StarkDCA is Live',
+      'linear-gradient(135deg, #FE6606 0%, #CDA41B 100%)',
+      `<h1 style="color: white; margin: 0; font-size: 28px; font-family: 'Poppins', sans-serif;">StarkDCA is Live</h1>`,
+      `<p style="font-size: 16px; margin-top: 0;">Hello {{name}},</p>
+       <p style="color: #555;">StarkDCA is now live and you have early access as a waitlist member.</p>
+       <p style="color: #555;">{{content}}</p>
+       <div style="text-align: center; margin: 30px 0;">
+         <a href="${frontendUrl}/signup" style="background: linear-gradient(135deg, #FE6606, #e55a05); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block;">Create Your Account</a>
+       </div>`,
+    ),
   };
 
   let html = templates[templateName] || templates.announcement;
