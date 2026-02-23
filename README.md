@@ -198,33 +198,33 @@ Tests cover: plan creation, execution, completion, cancellation, and authorizati
 
 ### Backend (`apps/backend/.env`)
 
-| Variable                | Description                          |
-| ----------------------- | ------------------------------------ |
-| `PORT`                  | Server port (default: 4000)          |
-| `NODE_ENV`              | `development` or `production`        |
-| `DATABASE_URL`          | PostgreSQL connection string         |
-| `REDIS_URL`             | Redis connection string              |
-| `JWT_SECRET`            | Secret key for JWT tokens            |
-| `JWT_ACCESS_SECRET`     | JWT access token secret (min 32 ch)  |
-| `JWT_REFRESH_SECRET`    | JWT refresh token secret (min 32 ch) |
-| `STARKNET_RPC_URL`      | Starknet RPC endpoint                |
-| `DCA_CONTRACT_ADDRESS`  | Deployed DCA contract address        |
-| `EXECUTOR_PRIVATE_KEY`  | Private key for the executor account |
-| `EXECUTOR_ADDRESS`      | Executor account address             |
-| `EMAIL_SERVICE_URL`     | Vercel email-endpoint URL            |
-| `EMAIL_SERVICE_API_KEY` | Shared secret with email service     |
-| `CORS_ORIGIN`           | Allowed frontend origin for CORS     |
-| `FRONTEND_URL`          | Frontend URL (used in emails)        |
-| `GOOGLE_CLIENT_ID`      | Google OAuth client ID               |
-| `GOOGLE_CLIENT_SECRET`  | Google OAuth client secret           |
-| `BCRYPT_ROUNDS`         | Password hashing rounds (default 12) |
+| Variable                | Description                             |
+| ----------------------- | --------------------------------------- |
+| `PORT`                  | Server port (default: 4000)             |
+| `NODE_ENV`              | `development` or `production`           |
+| `DATABASE_URL`          | PostgreSQL connection string            |
+| `REDIS_URL`             | Redis connection string                 |
+| `JWT_SECRET`            | Secret key for JWT tokens               |
+| `JWT_ACCESS_SECRET`     | JWT access token secret (min 32 ch)     |
+| `JWT_REFRESH_SECRET`    | JWT refresh token secret (min 32 ch)    |
+| `STARKNET_RPC_URL`      | Starknet RPC endpoint                   |
+| `DCA_CONTRACT_ADDRESS`  | Deployed DCA contract address           |
+| `EXECUTOR_PRIVATE_KEY`  | Private key for the executor account    |
+| `EXECUTOR_ADDRESS`      | Executor account address                |
+| `EMAIL_SERVICE_URL`     | Vercel email-endpoint URL               |
+| `EMAIL_SERVICE_API_KEY` | Shared secret with email service        |
+| `CORS_ORIGIN`           | Allowed frontend origin for CORS        |
+| `FRONTEND_URL`          | Frontend URL (used in emails)           |
+| `GOOGLE_CLIENT_ID`      | Google OAuth client ID                  |
+| `GOOGLE_CLIENT_SECRET`  | Google OAuth client secret              |
+| `BCRYPT_ROUNDS`         | Password hashing rounds (default 12)    |
 | `ENABLE_CRON`           | Enable in-process cron (`true`/`false`) |
 
 ### Frontend (`apps/frontend/.env`)
 
 | Variable                    | Description                              |
 | --------------------------- | ---------------------------------------- |
-| `VITE_API_URL`              | Backend API base URL (include `/v1`) |
+| `VITE_API_URL`              | Backend API base URL (include `/v1`)     |
 | `VITE_STARKNET_CHAIN_ID`    | Target chain (`SN_SEPOLIA` or `SN_MAIN`) |
 | `VITE_DCA_CONTRACT_ADDRESS` | DCA contract address for direct reads    |
 | `VITE_DCA_ENGINE_ADDRESS`   | DCA engine contract address              |
@@ -296,7 +296,7 @@ npm run build:frontend
 
 - **Website:** [www.starkdca.xyz](https://www.starkdca.xyz)
 - **Support:** [support@starkdca.xyz](mailto:support@starkdca.xyz)
-- **X / Twitter:** [@StarkDCA_](https://x.com/StarkDCA_)
+- **X / Twitter:** [@StarkDCA\_](https://x.com/StarkDCA_)
 - **GitHub:** [RabbitDaCoder/StarkDCA](https://github.com/RabbitDaCoder/StarkDCA)
 
 ---
