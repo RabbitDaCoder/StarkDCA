@@ -237,3 +237,37 @@
       0 0 120px 40px rgba(107, 138, 230, 0.03);
   }
 }
+
+/* StarknetKit Modal Title Styling — Fix Truncation */
+/* Target the starknetkit modal h1 title specifically */
+[part='starknetkit-modal'] h1 {
+  max-width: 100% !important;
+  font-size: 0.95rem !important; /* ~15px - reduced to fit text */
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  text-overflow: unset !important;
+  line-height: 1.4;
+}
+
+/* Fallback: target dialog role with h1 */
+[role='dialog'] h1 {
+  max-width: 100% !important;
+  font-size: 0.95rem !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+/* Target other modal headings as fallback */
+.modal h1,
+.modal h2,
+.modal h3,
+[data-modal] h1,
+[data-modal] h2,
+[data-modal] h3 {
+  font-size: 0.95rem !important;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+}
