@@ -30,7 +30,7 @@ export default function CTASection() {
             className="bg-brand-orange hover:bg-brand-orange/90 text-white h-14 px-10 text-base font-semibold rounded-xl shadow-lg shadow-brand-orange/25 transition-all hover:shadow-brand-orange/40 hover:scale-[1.02]"
             asChild
           >
-            <Link to="/waitlist">
+            <Link to="/login">
               Join Early Access
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>

@@ -54,7 +54,7 @@ export default function HeroSection() {
               className="bg-brand-orange hover:bg-brand-orange/90 text-white h-12 px-8 text-base font-semibold rounded-xl shadow-lg shadow-brand-orange/25 transition-all hover:shadow-brand-orange/40 hover:scale-[1.02]"
               asChild
             >
-              <Link to="/waitlist">
+              <Link to="/login">
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

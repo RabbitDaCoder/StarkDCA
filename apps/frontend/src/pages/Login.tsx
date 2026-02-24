@@ -53,8 +53,6 @@ export default function Login() {
         navigate('/admin');
       } else if (!user?.emailVerified) {
         navigate('/verify-email');
-      } else if (!user?.launchAccessGranted) {
-        navigate('/waitlist');
       } else {
         navigate('/app/dashboard');
       }

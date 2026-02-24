@@ -27,10 +27,10 @@ export default function VerifyEmail() {
   const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Already verified? Redirect to waitlist
+  // Already verified? Redirect to dashboard
   useEffect(() => {
     if (user?.emailVerified) {
-      navigate('/waitlist', { replace: true });
+      navigate('/app/dashboard', { replace: true });
     }
   }, [user?.emailVerified, navigate]);
 
@@ -106,9 +106,9 @@ export default function VerifyEmail() {
           waitlistPosition: result.waitlistPosition,
         });
 
-        // Redirect to waitlist after a brief celebration
+        // Redirect to dashboard after a brief celebration
         setTimeout(() => {
-          navigate('/waitlist', { replace: true });
+          navigate('/app/dashboard', { replace: true });
         }, 3000);
       }
     } catch (err: any) {
@@ -167,7 +167,7 @@ export default function VerifyEmail() {
 
           <p className="text-lg text-white/70 mb-10 max-w-md">
             We've sent a 6-digit verification code to your email address. Enter it to confirm your
-            account and secure your spot on the waitlist.
+            account and get started with StarkDCA.
           </p>
 
           {/* Security note */}
@@ -220,8 +220,8 @@ export default function VerifyEmail() {
                       Email Verified!
                     </h2>
                     <p className="text-muted-foreground mb-8">
-                      Welcome aboard, {user?.name?.split(' ')[0] || 'there'}! You've been added to
-                      our waitlist.
+                      Welcome aboard, {user?.name?.split(' ')[0] || 'there'}! Your account is ready
+                      to use.
                     </p>
                   </motion.div>
 
@@ -245,7 +245,7 @@ export default function VerifyEmail() {
                     transition={{ delay: 0.8 }}
                     className="text-sm text-muted-foreground"
                   >
-                    Redirecting to your waitlist page...
+                    Redirecting to your dashboard...
                   </motion.p>
                 </CardContent>
               </div>

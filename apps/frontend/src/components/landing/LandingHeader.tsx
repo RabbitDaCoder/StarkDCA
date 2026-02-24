@@ -85,7 +85,7 @@ export default function LandingHeader() {
             size="sm"
             className="hidden md:inline-flex bg-brand-orange hover:bg-brand-orange/90 text-white font-medium rounded-lg shadow-lg shadow-brand-orange/20 transition-all hover:shadow-brand-orange/30 hover:scale-[1.02]"
           >
-            <Link to="/waitlist">
+            <Link to="/login">
               Join Early Access
               <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
             </Link>
@@ -127,7 +127,7 @@ export default function LandingHeader() {
               asChild
               className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-medium rounded-lg"
             >
-              <Link to="/waitlist" onClick={closeMobile}>
+              <Link to="/login" onClick={closeMobile}>
                 Join Early Access
                 <ArrowRight className="ml-1.5 h-4 w-4" />
               </Link>
